@@ -8,9 +8,9 @@ classdef TargetClass < handle
     
     methods
         function obj = TargetClass(location)
-            temp = [obj.states, [location, obj.time]];  
+            temp = [obj.states, [location; obj.time]];  
             obj.states = temp;
-            obj.sigma = 0.01;
+            obj.sigma = 0.001;
         end
 
         function r = incrementTime(obj, dt)
@@ -25,7 +25,7 @@ classdef TargetClass < handle
 
             next = [sin(obj.time/(8*pi)), sin(obj.time/(8*pi))*cos(obj.time/(8*pi))];
             next = next + normrnd(0, obj.sigma, [1,2]);
-            temp = [obj.states; [next, obj.time]]; 
+            temp = [obj.states; [next]; 
             obj.states = temp;
             
             r = obj.states(end, 1:2);
