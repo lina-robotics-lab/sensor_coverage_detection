@@ -1,12 +1,11 @@
- classdef TargetClass < handle
-    
-   
+ classdef TargetClass < handle  
     properties
         time = 0;
         states = [];
         sigma = 0.1;
-      
-        dynamics=[];
+
+        % dynamics should be a function which takes in a single parameter, t, and return a location vector. 
+        dynamics=[]; 
        
        
     end
@@ -22,6 +21,7 @@
                 obj.dynamics = @(t) [sin(omega*t), sin(omega*t)*cos(omega*t)];
             else
                 obj.dynamics = dynamics;
+            end
 
         end
 
@@ -32,26 +32,12 @@
         function r = returnPos(obj)
             r = obj.states(end, 1:2);
         end
-%         function r = stateUpdateDefault(obj,dt,state)
-%             % Input a state vector, return the next state.
-%             % Assume the object dynamics is default dynamics.
-%             omega = 0.1;
-%             t = asin(state(1))/omega;
-%             r = obj.dynamics(t+dt);
-%         end
-%         function r = motionUpdateDefault(obj,dt)
-% 
-%             next = obj.stateUpdateDefault(dt,obj.states(end,1:2));
-%             next = next + normrnd(0, obj.sigma, [1,2]);
-%             temp = [obj.states; next]; 
-%             obj.states = temp;
-%             r = obj.states(end, 1:2);
-%         end
+
         function r = motionUpdate(obj)
 
             next = obj.dynamics(obj.time);
             next = next + normrnd(0, obj.sigma, [1,2]);
-            temp = [obj.states; [next, obj.time]]; 
+            temp = [obj.states; next]; 
             obj.states = temp;
             
             r = obj.states(end, 1:2);
