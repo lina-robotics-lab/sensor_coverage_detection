@@ -1,16 +1,28 @@
-classdef TargetClass < handle
+ classdef TargetClass < handle
     
+   
     properties
         time = 0;
         states = [];
         sigma = 0.1;
+      
+        dynamics=[];
+       
+       
     end
     
     methods
-        function obj = TargetClass(location)
+        function obj = TargetClass(location,dynamics)
             temp = [obj.states, location];  
             obj.states = temp;
-            obj.sigma = 0.001;
+            obj.sigma = 0.01;
+            if nargin<2
+                % default target dynamics, 8-shape curve
+                omega = 0.1;
+                obj.dynamics = @(t) [sin(omega*t), sin(omega*t)*cos(omega*t)];
+            else
+                obj.dynamics = dynamics;
+
         end
 
         function r = incrementTime(obj, dt)
@@ -20,12 +32,26 @@ classdef TargetClass < handle
         function r = returnPos(obj)
             r = obj.states(end, 1:2);
         end
-        
+%         function r = stateUpdateDefault(obj,dt,state)
+%             % Input a state vector, return the next state.
+%             % Assume the object dynamics is default dynamics.
+%             omega = 0.1;
+%             t = asin(state(1))/omega;
+%             r = obj.dynamics(t+dt);
+%         end
+%         function r = motionUpdateDefault(obj,dt)
+% 
+%             next = obj.stateUpdateDefault(dt,obj.states(end,1:2));
+%             next = next + normrnd(0, obj.sigma, [1,2]);
+%             temp = [obj.states; next]; 
+%             obj.states = temp;
+%             r = obj.states(end, 1:2);
+%         end
         function r = motionUpdate(obj)
 
-            next = [sin(obj.time/(8*pi)), sin(obj.time/(8*pi))*cos(obj.time/(8*pi))];
+            next = obj.dynamics(obj.time);
             next = next + normrnd(0, obj.sigma, [1,2]);
-            temp = [obj.states; next]; 
+            temp = [obj.states; [next, obj.time]]; 
             obj.states = temp;
             
             r = obj.states(end, 1:2);
