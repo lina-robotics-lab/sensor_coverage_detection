@@ -6,8 +6,9 @@ target = TargetClass([0,0]);
 target.incrementTime(dt);
 
 for i = 1:limit
-    target.motionUpdate();
-    target.incrementTime(dt);
+%     target.motionUpdate();
+%     target.incrementTime(dt);
+      target.motionUpdateDefault(dt)
 end
 
 % target.states
