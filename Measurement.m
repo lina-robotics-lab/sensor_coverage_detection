@@ -43,14 +43,16 @@ classdef Measurement < handle
             h = (r-obj.c1)^obj.b+obj.c2;
         end
         
-        function y = measureUpdate(obj,state)
+        function y = measureUpdate(obj,state,varargin)
             % Given a state vector(essentially a location vector),
             % return the vector of measurement
             % output from sensors at sensorLocs, using the measure() method
             % of this class.
             
-            % We assume sensorLocs and state are all row vectors.
-            rs = sqrt(sum((obj.sensorLocs-state).^2,2));
+            % We assume sensorLocs are row vectors, state is a column vector.
+            % The measurement output is a column vector.
+    
+            rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
             y = zeros(length(rs),1);
             for i=1:length(y)
                 y(i)=obj.measure(rs(i));

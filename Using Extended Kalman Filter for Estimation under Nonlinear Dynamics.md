@@ -30,7 +30,84 @@ Then we can still calculate the M matrix, and apply the same P-controller on est
 
 Under this setup, the update for Extended Kalman Filter becomes:
 $$
-\hat x[n|n] = \hat x[n|n-1]+M(y_v[n] - f(x[n|n-1]n,u[n],0))\\
-\hat y[n|n] = h(x[n|n])
+\hat x[n|n] = \hat x[n|n-1]+M(y_v[n] - f(\hat x[n|n-1]n,u[n],0))\\
+\hat y[n|n] = h(\hat x[n|n])
 $$
-Notice we use f and h as backbox functions which accept queries.
+Notice we use f and h as blackbox functions which accept queries.
+
+## EKF in matlab
+
+```matlab
+ekf = extendedKalmanFilter(StateTransitionFcn,MeasurementFcn,InitialState)
+```
+
+Creates an EKF.
+
+In the maths notion defined above
+
+```matlab
+ ekf = extendedKalmanFilter(@f,@h,InitialState)
+```
+
+More concretely,
+
+```matlab
+ekf = extendedKalmanFilter(@dynamics.stateUpdate,@measure.measureUpdate,[0.1;0.1])
+```
+
+Notice `[0.1;0.1]` determines the shape of all following updates.
+
+The expected signature of `f, h` are 
+
+```matlab
+f(x,u)
+h(x,u,v)
+```
+
+Now we can introduce predict and correct function.
+
+---
+
+```matlab
+ekf.predict(u)
+```
+
+This corresponding behavior is
+
+`ekf.State=f(ekf.State,u)`
+
+if u is absent(as in our application), directly call `ekf.predict()` to update `ekf.State`
+
+---
+
+```matlab
+ekf.correct(y,u)
+```
+
+It corresponds to the following maths
+$$
+\hat x[n|n] = \hat x[n|n-1]+M(y_v[n] - h(\hat x[n|n-1],u[n]))
+$$
+and the following code
+
+```matlab
+ekf.State = ekf.State+ M(y-h(ekf.State,u))
+```
+
+
+
+in our application, u is absent, so we directly use
+
+```matlab
+ekf.correct(y_v)
+```
+
+to do the State estimation correction.
+
+## Pay special attention to shape consistency when giving input to EKF
+
+- y_v **is of the same shape of the output of** `h`, crucial when calling ekf.correct().
+- We typically will change the shape of y_v when modifying the number of sensors to use in Measurement class, so make sure the shape are consistent.
+- The initial state should be of the same shape of the input of `f`, mind this when doing ekf initialization.
+- The input and output shape of `f` should be the same. 
+

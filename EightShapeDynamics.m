@@ -22,15 +22,15 @@ classdef EightShapeDynamics < handle
         function state = stateAt(obj,t)
            % A state vector is a 
            omega = obj.omega;
-           state = [sin(omega*t), sin(omega*t)*cos(omega*t)];
+           state = [sin(omega*t); sin(omega*t)*cos(omega*t)];
         end
         
-        function new_state = stateUpdate(obj,state)
+        function new_state = stateUpdate(obj,state,varargin)
             % This method takes in a state vector generate by a
             % eight_shape_dynamics with the same omega parameter,
             % return the state vector at t+obj.dt
             
-           
+          
             
             if state(1)==0 && state(2)==0
                 disp("At location (0,0), the state update is undeterminable!");
@@ -42,7 +42,7 @@ classdef EightShapeDynamics < handle
                 % Magical math derivation.
                 % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
                  
-                new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*state(2)/(state(1)+epsilon),state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*state(2)/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
             end
         end
     end
