@@ -4,7 +4,7 @@ time = 0;
 dt = 0.01;
 omega = 0.05*pi;
 dynamics = eight_shaped_dynamics(omega,dt);
-target = TargetClass([1e-5,1e-5],@dynamics.stateAt);
+target = TargetClass([0.000001,0.0],@dynamics.stateAt);
 target.incrementTime(dt);
 
 

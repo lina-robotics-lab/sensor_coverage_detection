@@ -2,6 +2,8 @@
     properties
         time = 0;
         states = [];
+        
+        % sigma is the std parameter for Gaussian Noise magnitude.
         sigma = 0.1;
 
         % dynamics should be a function which takes in a single parameter, t, and return a location vector. 
