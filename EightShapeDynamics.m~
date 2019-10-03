@@ -1,9 +1,9 @@
 % This file contains the class of eight_shaped_dynamics function.
 % When using this class, do the following:
-% >> dynamics = eight_shaped_dynamics(omega,dt)
+% >> dynamics = EightShapeDynamics(omega,dt)
 % >> dynamics.stateAt(t)
 % >> dynamics.stateUpdate(state)
-classdef eight_shaped_dynamics < handle
+classdef EightShapeDynamics < handle
     properties
         omega = 0.1; % omega is the revolving frequency of the curve.
         
@@ -12,7 +12,7 @@ classdef eight_shaped_dynamics < handle
         
     end
     methods
-        function obj = eight_shaped_dynamics(omega,dt)
+        function obj = EightShapeDynamics(omega,dt)
           if nargin == 1
             obj.omega = omega;
           elseif nargin == 2  
@@ -27,18 +27,18 @@ classdef eight_shaped_dynamics < handle
         function new_state = stateUpdate(obj,state)
             % This method takes in a state vector generate by a
             % eight_shape_dynamics with the same omega parameter,
-            % retrieve t from the state vector, and then return the state vector at t+obj.dt
+            % return the state vector at t+obj.dt
+            % Key formula used:sin(
             
-            if state(1)==0
-                disp("sin(omega*t)=0, the state update is undeterminable!");
+            if state(1)==0 && state(2)==0
+                disp("At location (0,0), the state update is undeterminable!");
             else
                 omega = obj.omega;
                 dt = obj.dt;
                 epsilon = 1e-8;
 
-                % Magical math derivation. Relies on the non-zero assumption of
-                % state(1), i.e. sin(omega*t).
-                new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*state(2)/state(1),state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                % Magical math derivation.
+                new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*state(2)/(state(1)+epsilon),state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
             end
         end
     end

@@ -3,8 +3,9 @@ limit = 10000;
 time = 0;
 dt = 0.01;
 omega = 0.05*pi;
-dynamics = eight_shaped_dynamics(omega,dt);
-target = TargetClass([1e-5,1e-5],@dynamics.stateAt);
+dynamics = EightShapeDynamics(omega,dt);
+initial_location = [1e-5,1e-5]; % Caveat: do not choose a [0,0] initial location for 8-shape curve!
+target = TargetClass(initial_location,@dynamics.stateAt);
 target.incrementTime(dt);
 
 
@@ -19,7 +20,6 @@ for i = 1:limit
 
     target.motionUpdate();
     target.incrementTime(dt);
-%       target.motionUpdateDefault(dt)
 end
 
 % target.states
