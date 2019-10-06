@@ -1,0 +1,34 @@
+% This file contains the class of eight_shaped_dynamics function.
+% When using this class, do the following:
+% >> dynamics = eight_shaped_dynamics(omega)
+% >> dynamics(t)
+classdef eight_shaped_dynamics < handle
+    properties
+        omega = 0.1; % omega is the revolving frequency of the curve.
+        
+        dt = 0; % dt is required by stateUpdate method. It is the time 
+                % interval for stateUpdate.
+        
+    end
+    methods
+        function obj = eight_shaped_dynamics(omega)
+          if nargin > 0
+            obj.omega = omega;
+          end
+        end
+        function loc = subsref(obj,t)
+           t = t(1).subs{1};% Argument parsing.
+           omega = obj.omega;
+           loc = [sin(omega*t), sin(omega*t)*cos(omega*t)];
+        end
+        
+        function loc = stateUpdate(obj,state)
+            % This method takes in a state vector generate by a
+            % eight_shape_dynamics with the same omega parameter,
+            % retrieve t from the state vector, and then return the state vector at t+obj.dt
+            
+            next_t = asin(state(1))/obj.o+obj.dt*obj.omega;
+            loc = [sin(phase),sin(phase)*cos(phase)];
+        end
+    end
+end

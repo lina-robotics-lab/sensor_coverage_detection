@@ -67,8 +67,7 @@ Kalman Filter users assume there is a system with unknown state x. Only the inpu
 The state space of this interesting system is:
 $$
 x[n+1]=Ax[n]+Bu[n]+Bw[n]
-$$
-$$
+\\
 y[n]=Cx[n]
 $$
 
