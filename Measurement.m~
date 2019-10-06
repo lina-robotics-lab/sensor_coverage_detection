@@ -61,9 +61,11 @@ classdef Measurement < handle
             end
         end
         function dhdq = measureJacobian(obj,state,varargin)
-            b= obj.b;
             rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
-            dhdq=b*rs.^(b-2).* (state-obj.sensorLocs)';
+            dhdq = zeros(length(rs),length(state));
+            for i = 1:length(rs)
+                dhdq(i)
+            end
         end
         
     end
