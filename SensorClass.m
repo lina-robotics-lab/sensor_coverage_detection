@@ -29,14 +29,19 @@ classdef SensorClass < handle
         
         function r = measureTarget(obj, target) % make angle calc to target
             location = obj.states(end, 1:2) - target;
-            r = atan(location(2)/location(1));
+            obj.angle = atan(location(2)/location(1));
+            r = obj.angle;
         end
         
         function r = moveSensor(obj, cwNeighbor, ccwNeighbor)   % only angles to neighbors
             cwDif = abs(cwNeighbor - obj.angle);
             ccwDif = abs(ccwNeighbor - obj.angle);
             
-            move 
+            angle_move = (1/4)*(cwDif - ccwDif);
+            obj.angle = obj.angle + angle_move;
+            
+            
+            
             
         end
     end
