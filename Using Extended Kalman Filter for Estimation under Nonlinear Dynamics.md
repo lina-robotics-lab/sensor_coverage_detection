@@ -1,5 +1,9 @@
 # Using Extended Kalman Filter for Estimation under Nonlinear Dynamics
 
+The [EKFUsageDemo.m](EKFUsageDemo.m) contains a working script for this documentation. You may run it in matlab to see how to actually use EKF in matlab.
+
+
+
 Resource from https://www.mathworks.com/help/control/ref/extendedkalmanfilter.html
 
 Recall in linear Kalman Filter we have
@@ -104,9 +108,19 @@ ekf.correct(y_v)
 
 to do the State estimation correction.
 
+## *The standard code of EKF update   
+
+```matlab
+actual_loc=dynamics.stateUpdate(actual_loc);
+plant_measurement = meas.measureUpdate(actual_loc);
+ekf.correct(plant_measurement);
+ekf.predict();
+```
+**Important: for the ekf states to be properly updated, the call of ekf.correct() must be followed by call ekf.predict() ! If we do not ekf.predict() after calling ekf.correct(), the state of ekf will be wrong!**
+
 ## Pay special attention to shape consistency when giving input to EKF
 
-- y_v **is of the same shape of the output of** `h`, crucial when calling ekf.correct().
+- y_v **must be of the same shape of the output of** `h`, crucial when calling ekf.correct().
 - We typically will change the shape of y_v when modifying the number of sensors to use in Measurement class, so make sure the shape are consistent.
 - The initial state should be of the same shape of the input of `f`, mind this when doing ekf initialization.
 - The input and output shape of `f` should be the same. 
