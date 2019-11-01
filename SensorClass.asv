@@ -38,9 +38,7 @@ classdef SensorClass < handle
         % Finds angle between two sensors
         function r = angleFinder(obj, neighbor, own)
             ownQuat = eul2quat([0, own, 0]);
-            ownQuat = ownQuat / norm(ownQuat);
             neighQuat = eul2quat([0, neighbor, 0]);
-            neighQuat = neighQuat / norm(neighQuat);
             totQuat = quatmultiply(quatconj(ownQuat), neighQuat);
             
             dif = 2 * atan2(norm(totQuat(2:4)),totQuat(1));
@@ -67,7 +65,10 @@ classdef SensorClass < handle
 %             ccwNeighbor
             cwDif = obj.angleFinder(cwNeighbor, obj.angle);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle);
-  
+            
+            if(cwDif > ccwDif)
+                cwDif = 2*pi - cwDif;
+            end
             
             angle_move = (1/4)*(cwDif - ccwDif);
                        
