@@ -6,31 +6,19 @@ classdef SensorClass < handle
         % 1. Angles should always vary between 0 and 2*pi
         % 2. Angle value increases in counter-clockwise(ccw) direction.
         angle = 0;
-        
-        % A row in obj.states is [x,y,angle,time].
         states = [];    % track the angle along w/ x,y
-        
-        % Control gain as defined in Martinez & Bullo's Paper. By default
-        % it takes value 1/4.
-        k = 1/4;         
-        
+        sigma = 0.1;        
+        movement = [0, 0];
     end
     
     methods
-        function obj = SensorClass(location, target,varargin)
+        function obj = SensorClass(location, target)
             distance = location - target;
-            
-            [theta,rho]= cart2pol(distance(1), distance(2));
+            [theta,rho]= cart2pol(distance(2), distance(1));
             obj.angle=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
-            
             temp = [obj.states; [location, obj.angle, obj.time]];  
             obj.states = temp;
-            
-            obj.k=1/4;
-            if nargin>=3
-                obj.k = varargin{1};
-            end
-            
+            obj.sigma = 0.001;
         end
         
         function r = incrementTime(obj, dt)
@@ -47,9 +35,7 @@ classdef SensorClass < handle
         
         function r = measureTarget(obj, target) % make angle calc to target
             location = obj.states(end, 1:2) - target;
-            
-            %[theta,rho]=cart2pol(x,y)
-            [theta,rho]= cart2pol(location(1), location(2));%cart2pol returns an angle between -pi and pi
+            [theta,rho]= cart2pol(location(2), location(1));%cart2pol returns an angle between -pi and pi
             obj.angle=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
             r = obj.angle;
         end
@@ -57,23 +43,19 @@ classdef SensorClass < handle
         function r = angleFinder(obj, neighbor_angle, own_angle)
             % Both neighbor_angle and own_angle are between 0 and 2*pi.
             % The angle difference is always between 0 and pi.
-            diff=abs(neighbor_angle-own_angle);
-            r=min(2*pi-diff,diff);
+            r=min(pi,abs(neighbor_angle-own_angle));
         end
 
-        function r = moveSensor(obj, cwNeighbor, ccwNeighbor,dist_to_target)   % only angles to neighbors
+        function r = moveSensor(obj, cwNeighbor, ccwNeighbor)   % only angles to neighbors
             cwDif = obj.angleFinder(cwNeighbor, obj.angle);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle);
              
-            angle_move = obj.k*(ccwDif - cwDif);
-            % This is the rule specifie by Martinez & Bullo's paper.
-            % k is the control gain. Different k will influence the final
-            % convergence locations.
+            angle_move = (1/4)*(ccwDif - cwDif);% This is the rule specifie by Martinez & Bullo's paper
             
             % The angle must vary between 0 and 2*pi.
             obj.angle = mod(obj.angle + angle_move,2*pi); 
             
-            radius = dist_to_target;
+            radius = 1;
             location = [radius*cos(obj.angle), radius*sin(obj.angle)];
             
             temp = [obj.states; [location, obj.angle, obj.time]];  

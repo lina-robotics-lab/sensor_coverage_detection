@@ -2,12 +2,18 @@
 % moving in 8-shaped trajectory in 2-D.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dt = 0.01;
-omega = 0.1;
+dt = 0.1;
+% dt = 1;
+
+% omega = 100;
+omega = 10;
+
 total_time = 62;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 max_iter= floor(total_time/dt);
 
 sensorLocs = [[0;1.5] [1.5;0] [-1.5;0] [0;-1.5]]; % By convention, locations should be an array of columns.
+% sensorLocs = [[0;1.5] [-1.5;0] ]; % By convention, locations should be an array of columns.
+
 space_dimension = size(sensorLocs);
 space_dimension = space_dimension(1);
 
@@ -24,8 +30,8 @@ dynamics =  EightShapeDynamics(omega, dt);
 mus = zeros(length(sensorLocs),1);
 measure_noise = 0.05*eye(length(sensorLocs));
 proc_noise = 1e-5*eye(space_dimension);
-b = 1;
-% b = -2;
+% b = 1;
+b = -2;
 meas = Measurement(b);
 meas.sensorLocs = sensorLocs;
 
@@ -34,12 +40,13 @@ meas.sensorLocs = sensorLocs;
 % Demo 1: directly call ekf.predict() for a series of times, see what
 % it produces.
 actual_loc = [0.01;0.01]; 
+% initial_location_estimation=actual_loc;
 initial_location_estimation=[-1;0.2];
 
 %  Create an ekf object
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
 ekf.ProcessNoise = proc_noise;
-ekf.MeasurementNoise = measure_noise
+ekf.MeasurementNoise = measure_noise;
 ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
 % Remark: dynamics.stateUpdate and meas.measureUpdate are both object methods
 
@@ -65,6 +72,7 @@ title("Actual Trajectory");
 % Demo 2: continue the simulation, but call ekf.correct() to correct the state of ekf by letting
 % it see the actual state.
 actual_loc = [0.01;0.01]; 
+% initial_location_estimation=actual_loc;
 initial_location_estimation=[-1;0.2];
 
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
@@ -91,7 +99,7 @@ for i = 1:max_iter
 end
 
 figure;
-tiledlayout(2,1);
+tiledlayout(3,1);
 nexttile;
 plot(predicts(1,:),predicts(2,:));
 title('Predicted Trajectory-With Correction');
@@ -99,6 +107,10 @@ nexttile;
 plot(actual_locs(1,:),actual_locs(2,:));
 title("Actual Trajectory");
 
+nexttile;
+error=sum((predicts-actual_locs).^2,1);
+plot(linspace(0,total_time,length(error)),error);
+title("error");
 % You should see after we incorporate ekf.correct(), the initially offed
 % estimation can be gradually corrected. You should also see some noisy
 % behavior if we tune up the noise magnitude in the beginning of this file.
