@@ -12,8 +12,8 @@ space_dimension = space_dimension(1);
 
 % Parameters for EightShapeDynamics.
 dt = 0.1;
-omega = 10;
-total_time = 62;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
+omega = 0.01;
+total_time = 10;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 max_iter= floor(total_time/dt);
 
 dynamics =  EightShapeDynamics(omega, dt);% Create the dynamics object
@@ -21,20 +21,24 @@ dynamics =  EightShapeDynamics(omega, dt);% Create the dynamics object
 
 % Feel free to change the num_of_sensors and initial_angles here.
 num_sensors = 3;
-initial_angles = 0.1*pi*rand(1,num_sensors); 
-initial_radii = 1.5*ones(1,num_sensors);
-origin=[0,0];
 k = 1/4; % Control gain for equi-angular control rule.
 % k = 1/2;
-
 % Initialization of sensors.
 sensors = SensorClass.empty(0,num_sensors);
+% Note: the sensors move along a boundary, which may not be a circled
+% centered at the target location.
+% boundary_origin=[0.8,0];
+boundary_origin=[0.8,0];
+initial_angles = 0.1*pi*rand(1,num_sensors); 
+boundary_radii = 1.5*ones(1,num_sensors);
+
 for i=1:num_sensors
     angle = initial_angles(i);
-    initial_loc = origin+initial_radii(i)*[cos(angle),sin(angle)];
-    s = SensorClass(initial_loc,target_loc,k);
+    initial_loc = boundary_origin+boundary_radii(i)*[cos(angle),sin(angle)];
+    s = SensorClass(initial_loc,boundary_origin,boundary_radii(i),k);
     sensors(i) = s;
 end
+
 
 % Entering main loop of the simulation
 target_locs = zeros(max_iter,space_dimension);
@@ -66,7 +70,7 @@ for i = 1:max_iter
       % Major difference to Static_Target: we need to calculate
       % sensor_dist_to_target dynamically.
       
-      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,dist_to_target); 
+      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,target_loc); 
    end
 end
 

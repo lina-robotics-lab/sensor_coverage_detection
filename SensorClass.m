@@ -27,7 +27,7 @@ classdef SensorClass < handle
 %             [theta,rho]= cart2pol(rel_loc(1), rel_loc(2));
 %             obj.angle_to_target=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
 %             
-            temp = [obj.states; [location, obj.angle_to_target, obj.time]];  
+            temp = [obj.states; [reshape(location,1,[]), obj.angle_to_target, obj.time]];  
             obj.states = temp;
       
             obj.k=1/4;
@@ -50,6 +50,7 @@ classdef SensorClass < handle
         end
         
         function r = measureTarget(obj, target) % make angle calc to target
+            target = reshape(target,1,[]);
             rel_loc_target = obj.states(end, 1:2) - target;
             
             %Syntax:[theta,rho]=cart2pol(x,y)
@@ -70,6 +71,7 @@ classdef SensorClass < handle
         end
 
         function r = moveSensor(obj, cwNeighbor, ccwNeighbor,target_loc)   % only angles to neighbors
+            target_loc=reshape(target_loc,1,[]);
             cwDif = obj.angleFinder(cwNeighbor, obj.angle_to_target);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle_to_target);
              
@@ -89,8 +91,9 @@ classdef SensorClass < handle
             % Project the extended location back to the boundary.
             rel_location = extended_update - obj.boundary_origin;
             rel_dist = dist(extended_update,obj.boundary_origin);
-            location = obj.boundary_origin+obj.boundary_r*rel_location/rel_dist; 
-            
+            location = obj.boundary_origin+obj.boundary_r/rel_dist*rel_location; 
+%             disp(dist(location,obj.boundary_origin));
+%             disp(obj.boundary_origin);
             temp = [obj.states; [location, obj.angle_to_target, obj.time]];  
             obj.states = temp;
             

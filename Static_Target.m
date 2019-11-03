@@ -20,7 +20,6 @@ k = 1/4; % Control gain for equi-angular control rule.
 sensors = SensorClass.empty(0,num_sensors);
 % Note: the sensors move along a boundary, which may not be a circled
 % centered at the target location.
-
 boundary_origin=[0.8,0];
 % boundary_origin=target_loc;
 boundary_radius = 0.5;
