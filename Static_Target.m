@@ -1,21 +1,33 @@
+% Script content: Move the sensors so that they distributed equi-angularly around a static
+% target.
+
 close all;
 
-distance_to_target = 1;
+% The sensors always move around a circle with radius 1, the origin being
+% the target.
+sensor_dist_to_target = 1;
+
+% The location of the static target.
 target_loc = [0,0];
 
+% Feel free to change the num_of_sensors and initial_angles here.
 num_sensors = 10;
-initial_angles = 0.1*pi*rand(1,num_sensors);
-% initial_angles = 0.1*[0,1,2];
+initial_angles = 0.1*pi*rand(1,num_sensors); 
+k = 1/4; % Control gain for equi-angular control rule.
+% k = 1/2;
 
+% Initialization of sensors.
 sensors = SensorClass.empty(0,num_sensors);
 for i=1:num_sensors
     angle = initial_angles(i);
-    initial_loc = target_loc+distance_to_target*[cos(angle),sin(angle)];
-    s = SensorClass(initial_loc,target_loc);
+    initial_loc = target_loc+sensor_dist_to_target*[cos(angle),sin(angle)];
+    s = SensorClass(initial_loc,target_loc,k);
     sensors(i) = s;
 end
 
-for i = 1:100
+% Entering main loop of the simulation
+max_iteration = 100;
+for i = 1:max_iteration
    angles = zeros(1,num_sensors);
    % Step 1: measure target simultaneously, after which the angle state of
    % each sensor is automatically updated.
@@ -23,16 +35,18 @@ for i = 1:100
        angles(j)=sensors(j).measureTarget(target_loc);
        % The angle of each sensor is automatically updated after calling measureTarget().
    end
-   % Sort the angles in order to obtain cw(clockwise) and ccw(counter-clockwise).
+   
+   % Step 2: Sort the angles in order to obtain the angles of cw_neighbor(clockwise) and ccw_neighor(counter-clockwise).
    % The angles increase in counter-clockwise direction by default.
    [sorted_angles,sorted_indices] = sort(angles);
-   % Sort is in ascending order by default.
+   % Matlab sorting is in ascending order by default.
    
+   % Step 3: move the sensors using predefined control rule.
    for j = 1:length(sorted_indices)
       curr_index = sorted_indices(j);
       cw_Neighbor = sorted_angles(cyclic_mod(j-1,num_sensors));
       ccw_Neighbor = sorted_angles(cyclic_mod(j+1,num_sensors));
-      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor); 
+      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,sensor_dist_to_target); 
    end
 end
 
@@ -54,10 +68,10 @@ end
 legend();
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Matlab use 1-based indexing, which makes cyclic array indexing by a[mod(i,p)]not
-% directly available. But we can hack this in the following way.
+% Matlab uses 1-based indexing, which makes cyclic array indexing by a[mod(i,p)]not
+% directly available. But we can hack our way out as follows:
 function r=cyclic_mod(n,p)
-% For example, cyclic_mod(1,3)=1,cyclic_mod(2,3)=2, cyclic_mod(3,3)=3,
-% cyclic_mod(4,3)=1,cyclic_mod(5,3)=2...
     r = p-mod(-n,p);
 end
+% The function behavior is the following: cyclic_mod(1,3)=1,cyclic_mod(2,3)=2, cyclic_mod(3,3)=3,
+% cyclic_mod(4,3)=1,cyclic_mod(5,3)=2...

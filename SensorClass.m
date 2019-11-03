@@ -6,19 +6,31 @@ classdef SensorClass < handle
         % 1. Angles should always vary between 0 and 2*pi
         % 2. Angle value increases in counter-clockwise(ccw) direction.
         angle = 0;
+        
+        % A row in obj.states is [x,y,angle,time].
         states = [];    % track the angle along w/ x,y
-        sigma = 0.1;        
-        movement = [0, 0];
+        
+        % Control gain as defined in Martinez & Bullo's Paper. By default
+        % it takes value 1/4.
+        k = 1/4;         
+        
     end
     
     methods
-        function obj = SensorClass(location, target)
+        function obj = SensorClass(location, target,varargin)
             distance = location - target;
+            
             [theta,rho]= cart2pol(distance(1), distance(2));
             obj.angle=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
+            
             temp = [obj.states; [location, obj.angle, obj.time]];  
             obj.states = temp;
-            obj.sigma = 0.001;
+            
+            obj.k=1/4;
+            if nargin>=3
+                obj.k = varargin{1};
+            end
+            
         end
         
         function r = incrementTime(obj, dt)
@@ -49,16 +61,19 @@ classdef SensorClass < handle
             r=min(2*pi-diff,diff);
         end
 
-        function r = moveSensor(obj, cwNeighbor, ccwNeighbor)   % only angles to neighbors
+        function r = moveSensor(obj, cwNeighbor, ccwNeighbor,dist_to_target)   % only angles to neighbors
             cwDif = obj.angleFinder(cwNeighbor, obj.angle);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle);
              
-            angle_move = (1/4)*(ccwDif - cwDif);% This is the rule specifie by Martinez & Bullo's paper
+            angle_move = obj.k*(ccwDif - cwDif);
+            % This is the rule specifie by Martinez & Bullo's paper.
+            % k is the control gain. Different k will influence the final
+            % convergence locations.
             
             % The angle must vary between 0 and 2*pi.
             obj.angle = mod(obj.angle + angle_move,2*pi); 
             
-            radius = 1;
+            radius = dist_to_target;
             location = [radius*cos(obj.angle), radius*sin(obj.angle)];
             
             temp = [obj.states; [location, obj.angle, obj.time]];  
