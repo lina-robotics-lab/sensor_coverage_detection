@@ -22,8 +22,6 @@ classdef SensorClass < handle
         function obj = SensorClass(location, boundary_origin,boundary_r,varargin)
             obj.boundary_origin=boundary_origin;
             obj.boundary_r = boundary_r;
-            
-            
 %             [theta,rho]= cart2pol(rel_loc(1), rel_loc(2));
 %             obj.angle_to_target=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
 %             
@@ -57,7 +55,7 @@ classdef SensorClass < handle
             [theta,rho]= cart2pol(rel_loc_target(1), rel_loc_target(2));%cart2pol returns an angle between -pi and pi
             obj.angle_to_target=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
             
-            temp = [obj.states; [rel_loc_target, obj.angle_to_target, obj.time]];  
+            temp = [obj.states; [obj.states(end, 1:2), obj.angle_to_target, obj.time]];  
             obj.states = temp;
           
             r = obj.angle_to_target;
@@ -69,9 +67,8 @@ classdef SensorClass < handle
             diff=abs(neighbor_angle-own_angle);
             r=min(2*pi-diff,diff);
         end
-
-        function r = moveSensor(obj, cwNeighbor, ccwNeighbor,target_loc)   % only angles to neighbors
-            target_loc=reshape(target_loc,1,[]);
+        function r=moveSensor(obj,cwNeighbor, ccwNeighbor,target_loc)
+            target_loc=reshape(target_loc,1,2);
             cwDif = obj.angleFinder(cwNeighbor, obj.angle_to_target);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle_to_target);
              
@@ -81,24 +78,25 @@ classdef SensorClass < handle
             % convergence locations.
             
             % The angle must vary between 0 and 2*pi.
-            obj.angle_to_target = mod(obj.angle_to_target + angle_move,2*pi); 
+            angle_update = mod(obj.angle_to_target + angle_move,2*pi); 
             
-            % Caculate the extended update location as if the sensor can
-            % move out of the boundary.
-            ext_r = dist(obj.states(end,1:2),target_loc);
-            extended_update = target_loc + ext_r*[cos(obj.angle_to_target), sin(obj.angle_to_target)];
+            % Caculate the update location, subject to that the sensor must
+            % move on the boundary.
             
-            % Project the extended location back to the boundary.
-            rel_location = extended_update - obj.boundary_origin;
-            rel_dist = dist(extended_update,obj.boundary_origin);
-            location = obj.boundary_origin+obj.boundary_r/rel_dist*rel_location; 
-%             disp(dist(location,obj.boundary_origin));
-%             disp(obj.boundary_origin);
-            temp = [obj.states; [location, obj.angle_to_target, obj.time]];  
+            locs = CircleIntersection(target_loc,angle_update,obj.boundary_origin,obj.boundary_r);
+            if isempty(locs)
+                location = obj.states(end,1:2);
+            else
+                location=locs;
+            end
+            
+            % Note: we can simulate giving a control signal to the sensor
+            % by directly updating the location, but we cannot claim
+            % anything about the angle_to_target state here, since the
+            % target may also be moving. So we set it to be NaN.
+            temp = [obj.states; [location, NaN, obj.time]];  
             obj.states = temp;
-            
             r = location;
-                        
         end
         
 %         function r = moveSensor(obj, move)
@@ -110,4 +108,19 @@ classdef SensorClass < handle
 end
 function r=dist(x,y)
     r=sum((x-y).^2).^0.5;
+end
+function intersection=CircleIntersection(target_loc,target_angle,boundary_origin,boundary_radius)
+    o = boundary_origin(1)+boundary_origin(2)*1j;
+    t=target_loc(1)+target_loc(2)*1j;
+    ot = (o-t)*exp(-1j*target_angle);
+    im = imag(ot)/boundary_radius;
+    alpha = real(ot)+boundary_radius*sqrt(1-im^2);
+    if imag(alpha)==0
+        intersection = t+alpha*exp(1j*target_angle);
+        
+        intersection=[real(intersection),imag(intersection)];
+    else
+%         disp("NO SOLUTION! The target line does not intersect with the circle.");
+        intersection=[];
+    end
 end

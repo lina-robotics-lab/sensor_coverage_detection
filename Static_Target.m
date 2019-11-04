@@ -22,7 +22,8 @@ sensors = SensorClass.empty(0,num_sensors);
 % centered at the target location.
 boundary_origin=[0.8,0];
 % boundary_origin=target_loc;
-boundary_radius = 0.5;
+boundary_radius = 2;
+% boundary_radius = 0.5;
 
 for i=1:num_sensors
     angle = initial_angles(i);
