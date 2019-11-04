@@ -36,14 +36,26 @@ classdef SensorClass < handle
         end
         
         % Finds angle between two sensors
-        function r = angleFinder(obj, neighbor, own)
-            ownQuat = eul2quat([0, own, 0]);
-            ownQuat = ownQuat / norm(ownQuat);
-            neighQuat = eul2quat([0, neighbor, 0]);
-            neighQuat = neighQuat / norm(neighQuat);
-            totQuat = quatmultiply(quatconj(ownQuat), neighQuat);
+        function r = angleFinder(obj, neighbor, own, clock)
+
             
-            dif = 2 * atan2(norm(totQuat(2:4)),totQuat(1));
+            
+            
+            %             ownQuat = eul2quat([0, own, 0]);
+%             ownQuat = ownQuat / norm(ownQuat);
+%             neighQuat = eul2quat([0, neighbor, 0]);
+%             neighQuat = neighQuat / norm(neighQuat);
+%             totQuat = quatmultiply(quatconj(ownQuat), neighQuat);
+%             
+%             dif = 2 * atan2(norm(totQuat(2:4)),totQuat(1));
+%             
+%             if(clock)
+%                 if(own > 0)
+%                     if(k - pi)
+%                         
+%                     end
+%                 end
+%             end
             
 %             dif = 0;
 %             if(sign(neighbor) == sign(own))
