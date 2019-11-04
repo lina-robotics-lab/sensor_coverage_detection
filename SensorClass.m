@@ -5,7 +5,9 @@ classdef SensorClass < handle
         % Implementation conventions: 
         % 1. Angles should always vary between 0 and 2*pi
         % 2. Angle value increases in counter-clockwise(ccw) direction.
+        % 3. Location vector is a column vector.
         angle_to_target = NaN;
+        curr_loc=[0;0];
         
         % A row in obj.states is [x,y,angle,time].
         states = [];    % track the angle along w/ x,y
@@ -22,12 +24,9 @@ classdef SensorClass < handle
         function obj = SensorClass(location, boundary_origin,boundary_r,varargin)
             obj.boundary_origin=boundary_origin;
             obj.boundary_r = boundary_r;
-%             [theta,rho]= cart2pol(rel_loc(1), rel_loc(2));
-%             obj.angle_to_target=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
-%             
-            temp = [obj.states; [reshape(location,1,[]), obj.angle_to_target, obj.time]];  
-            obj.states = temp;
-      
+            obj.curr_loc =location;
+            obj.states = [obj.states; [obj.curr_loc', obj.angle_to_target, obj.time]];        
+            
             obj.k=1/4;
             if nargin>=3
                 obj.k = varargin{1};
@@ -40,23 +39,21 @@ classdef SensorClass < handle
         end
         
         function r = returnPos(obj)
-            r = obj.states(end, 1:2);
+            r = obj.curr_loc;
         end
         
         function r = returnAngle(obj)
-            r = obj.states(end, 3);
+            r = obj.angle_to_target;
         end
         
         function r = measureTarget(obj, target) % make angle calc to target
-            target = reshape(target,1,[]);
-            rel_loc_target = obj.states(end, 1:2) - target;
+            rel_loc_target = obj.curr_loc - target;
             
             %Syntax:[theta,rho]=cart2pol(x,y)
             [theta,rho]= cart2pol(rel_loc_target(1), rel_loc_target(2));%cart2pol returns an angle between -pi and pi
             obj.angle_to_target=mod(theta,2*pi);%angles should always vary between 0 and 2*pi
             
-            temp = [obj.states; [obj.states(end, 1:2), obj.angle_to_target, obj.time]];  
-            obj.states = temp;
+            obj.states = [obj.states; [obj.curr_loc', obj.angle_to_target, obj.time]];  
           
             r = obj.angle_to_target;
         end
@@ -68,7 +65,7 @@ classdef SensorClass < handle
             r=min(2*pi-diff,diff);
         end
         function r=moveSensor(obj,cwNeighbor, ccwNeighbor,target_loc)
-            target_loc=reshape(target_loc,1,2);
+%             target_loc=reshape(target_loc,1,2);
             cwDif = obj.angleFinder(cwNeighbor, obj.angle_to_target);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle_to_target);
              
@@ -84,31 +81,23 @@ classdef SensorClass < handle
             % move on the boundary.
             
             locs = CircleIntersection(target_loc,angle_update,obj.boundary_origin,obj.boundary_r);
-            if isempty(locs)
-                location = obj.states(end,1:2);
-            else
-                location=locs;
+            if ~isempty(locs)
+               obj.curr_loc=locs;
             end
-            
             % Note: we can simulate giving a control signal to the sensor
             % by directly updating the location, but we cannot claim
             % anything about the angle_to_target state here, since the
             % target may also be moving. So we set it to be NaN.
-            temp = [obj.states; [location, NaN, obj.time]];  
-            obj.states = temp;
-            r = location;
+            obj.states =  [obj.states; [obj.curr_loc', NaN, obj.time]];
+            r = obj.curr_loc;
         end
         
-%         function r = moveSensor(obj, move)
-%             temp = [obj.states; [location, obj.angle_to_target, obj.time]];  
-%             obj.states = temp;
-%         end
     end
     
 end
-function r=dist(x,y)
-    r=sum((x-y).^2).^0.5;
-end
+% function r=dist(x,y)
+%     r=sum((x-y).^2).^0.5;
+% end
 function intersection=CircleIntersection(target_loc,target_angle,boundary_origin,boundary_radius)
     o = boundary_origin(1)+boundary_origin(2)*1j;
     t=target_loc(1)+target_loc(2)*1j;
@@ -118,7 +107,7 @@ function intersection=CircleIntersection(target_loc,target_angle,boundary_origin
     if imag(alpha)==0
         intersection = t+alpha*exp(1j*target_angle);
         
-        intersection=[real(intersection),imag(intersection)];
+        intersection=[real(intersection);imag(intersection)];
     else
 %         disp("NO SOLUTION! The target line does not intersect with the circle.");
         intersection=[];
