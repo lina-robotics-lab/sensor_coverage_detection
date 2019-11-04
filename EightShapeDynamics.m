@@ -13,9 +13,10 @@ classdef EightShapeDynamics < handle
     end
     methods
         function obj = EightShapeDynamics(omega,dt)
-          if nargin == 1
+          if nargin >= 1
             obj.omega = omega;
-          elseif nargin == 2  
+          end
+          if nargin >= 2  
              obj.dt = dt;
           end
         end

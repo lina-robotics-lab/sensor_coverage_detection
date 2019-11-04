@@ -1,41 +1,54 @@
-% Script content: Move the sensors so that they distributed equi-angularly around a static
-% target.
+% Script Content: the goal is similar to Static_Target, the difference is the
+% target now is moving(with EightShapeDynamics). No EKF is applied here, we
+% assume the measurement is perfect.
 
 close all;
 
-% The sensors always move around a circle with radius 1, the origin being
-% the target.
-sensor_dist_to_target = 1;
+% The initial location of the target.
+target_loc = [0.001; 0.001];
+space_dimension = size(target_loc);
+space_dimension = space_dimension(1);
 
-% The location of the static target.
-target_loc = [0,0];
+
+% Parameters for EightShapeDynamics.
+dt = 0.1;
+omega = 0.01;
+total_time = 10;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
+max_iter= floor(total_time/dt);
+
+dynamics =  EightShapeDynamics(omega, dt);% Create the dynamics object
+
 
 % Feel free to change the num_of_sensors and initial_angles here.
-num_sensors = 10;
-initial_angles = 0.1*pi*rand(1,num_sensors); 
+num_sensors = 3;
 k = 1/4; % Control gain for equi-angular control rule.
 % k = 1/2;
-
 % Initialization of sensors.
 sensors = SensorClass.empty(0,num_sensors);
 % Note: the sensors move along a boundary, which may not be a circled
 % centered at the target location.
-boundary_origin=[0.8,0];
-% boundary_origin=target_loc;
-boundary_radius = 2;
-% boundary_radius = 0.5;
+% boundary_origin=[0.8;0];
+boundary_origin=[0;0];
+initial_angles = 0.1*pi*rand(1,num_sensors); 
+boundary_radii = 1.5*ones(1,num_sensors);
 
 for i=1:num_sensors
     angle = initial_angles(i);
-    initial_loc = boundary_origin+boundary_radius*[cos(angle),sin(angle)];
-    s = SensorClass(initial_loc,boundary_origin,boundary_radius,k);
+    initial_loc = boundary_origin+boundary_radii(i)*[cos(angle);sin(angle)];
+    s = SensorClass(initial_loc,boundary_origin,boundary_radii(i),k);
     sensors(i) = s;
 end
 
+
 % Entering main loop of the simulation
-max_iteration = 100;
-for i = 1:max_iteration
+target_locs = zeros(max_iter,space_dimension);
+for i = 1:max_iter
    angles = zeros(1,num_sensors);
+   % Step 0: Update Target Location
+   target_locs(i,:)=target_loc';
+   target_loc=dynamics.stateUpdate(target_loc);
+  
+   
    % Step 1: measure target simultaneously, after which the angle state of
    % each sensor is automatically updated.
    for j=1:length(sensors)
@@ -53,6 +66,10 @@ for i = 1:max_iteration
       curr_index = sorted_indices(j);
       cw_Neighbor = sorted_angles(cyclic_mod(j-1,num_sensors));
       ccw_Neighbor = sorted_angles(cyclic_mod(j+1,num_sensors));
+      
+      % Major difference to Static_Target: we need to calculate
+      % sensor_dist_to_target dynamically.
+      
       sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,target_loc); 
    end
 end
@@ -61,8 +78,9 @@ end
 
 %%%%%%%%%%%%%%Plot out sensor movement trajectories%%%%%%%%%%%%%%%%
 marker_size=100;
-scatter(target_loc(1),target_loc(2),marker_size,'h','filled','red','DisplayName','Target');
+plot(target_locs(1:end,1),target_locs(1:end,2),'DisplayName',"Target "+" Trajectory");
 hold on;
+    
 for i=1:num_sensors
     s = sensors(i);
     scatter(s.states(1,1),s.states(1,2),marker_size,'d','DisplayName',"Sensor "+i+" Init Loc");
