@@ -16,12 +16,11 @@ for i = 1:50
    for j = 1:length(sensors)
       sensors(j).moveSensor(angles(j+2), angles(j)); 
    end
-%    disp("derp");
 end
 
 out = [s1.returnAngle(), s2.returnAngle(), s3.returnAngle()]
 
-% hold on;
-% scatter3(s1.states(1:end, 1), s1.states(1:end, 2), 1:1:51);
-% scatter3(s2.states(1:end, 1), s2.states(1:end, 2), 1:1:51);
+hold on;
+scatter3(s1.states(1:end, 1), s1.states(1:end, 2), 1:1:51);
+scatter3(s2.states(1:end, 1), s2.states(1:end, 2), 1:1:51);
 scatter3(s3.states(1:end, 1), s3.states(1:end, 2), 1:1:51);
