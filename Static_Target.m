@@ -8,7 +8,7 @@ close all;
 sensor_dist_to_target = 1;
 
 % The location of the static target.
-target_loc = [0,0];
+target_loc = [0;0];
 
 % Feel free to change the num_of_sensors and initial_angles here.
 num_sensors = 10;
@@ -20,14 +20,14 @@ k = 1/4; % Control gain for equi-angular control rule.
 sensors = SensorClass.empty(0,num_sensors);
 % Note: the sensors move along a boundary, which may not be a circled
 % centered at the target location.
-boundary_origin=[0.8,0];
+boundary_origin=[0.8;0];
 % boundary_origin=target_loc;
-boundary_radius = 2;
-% boundary_radius = 0.5;
+% boundary_radius = 2;
+boundary_radius = 0.5;
 
 for i=1:num_sensors
     angle = initial_angles(i);
-    initial_loc = boundary_origin+boundary_radius*[cos(angle),sin(angle)];
+    initial_loc = boundary_origin+boundary_radius*[cos(angle);sin(angle)];
     s = SensorClass(initial_loc,boundary_origin,boundary_radius,k);
     sensors(i) = s;
 end
