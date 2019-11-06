@@ -13,7 +13,7 @@ space_dimension = space_dimension(1);
 % Parameters for EightShapeDynamics.
 dt = 0.1;
 omega = 0.01;
-total_time = 10;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
+total_time = 60;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 max_iter= floor(total_time/dt);
 
 dynamics =  EightShapeDynamics(omega, dt);% Create the dynamics object
