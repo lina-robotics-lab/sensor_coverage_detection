@@ -1,3 +1,4 @@
+close all;
 % This script demos how to use EKF to estimate the coordinate of a target 
 % moving in 8-shaped trajectory in 2-D.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -6,7 +7,7 @@ dt = 0.1;
 % dt = 1;
 
 % omega = 100;
-omega = 10;
+omega = 0.1;
 
 total_time = 62;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 max_iter= floor(total_time/dt);
@@ -41,7 +42,7 @@ meas.sensorLocs = sensorLocs;
 % it produces.
 actual_loc = [0.01;0.01]; 
 % initial_location_estimation=actual_loc;
-initial_location_estimation=[-1;0.2];
+initial_location_estimation=[0;0.2];
 
 %  Create an ekf object
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
@@ -59,13 +60,14 @@ for i=1:max_iter
     predicts(:,i)=ekf.predict();
 end
 
-tiledlayout(2,1);
+% tiledlayout(2,1);
 
-nexttile;
+% nexttile;
 
 plot(predicts(1,:),predicts(2,:));
 title('Predicted Trajectory-No correction');
-nexttile;
+% nexttile;
+figure;
 plot(actual_locs(1,:),actual_locs(2,:));
 title("Actual Trajectory");
 
@@ -99,15 +101,17 @@ for i = 1:max_iter
 end
 
 figure;
-tiledlayout(3,1);
-nexttile;
+% tiledlayout(3,1);
+% nexttile;
 plot(predicts(1,:),predicts(2,:));
 title('Predicted Trajectory-With Correction');
-nexttile;
+% nexttile;
+figure;
 plot(actual_locs(1,:),actual_locs(2,:));
 title("Actual Trajectory");
 
-nexttile;
+% nexttile;
+figure;
 error=sum((predicts-actual_locs).^2,1);
 plot(linspace(0,total_time,length(error)),error);
 title("error");

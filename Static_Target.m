@@ -11,7 +11,7 @@ sensor_dist_to_target = 1;
 target_loc = [0;0];
 
 % Feel free to change the num_of_sensors and initial_angles here.
-num_sensors = 10;
+num_sensors = 3;
 initial_angles = 0.1*pi*rand(1,num_sensors); 
 k = 1/4; % Control gain for equi-angular control rule.
 % k = 1/2;
