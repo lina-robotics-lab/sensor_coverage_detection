@@ -12,9 +12,33 @@ omega = 0.1;
 total_time = 62;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 max_iter= floor(total_time/dt);
 
-sensorLocs = [[0;1.5] [1.5;0] [-1.5;0] [0;-1.5]]; % By convention, locations should be an array of columns.
-% sensorLocs = [[0;1.5] [-1.5;0] ]; % By convention, locations should be an array of columns.
+% Sensor Initialization
+% Feel free to change the num_of_sensors and initial_angles here.
+num_sensors = 3;
+k = 1/4; % Control gain for equi-angular control rule.
+% k = 1/2;
+% Initialization of sensors.
+sensors = SensorClass.empty(0,num_sensors);
+% Note: the sensors move along a boundary, which may not be a circled
+% centered at the target location.
+% boundary_origin=[0.8;0];
+boundary_origin=[0;0];
+initial_angles = 0.1*pi*rand(1,num_sensors); 
+boundary_radii = 1.5*ones(1,num_sensors);
 
+sensor_locs = zeros(2, num_sensors);
+
+for i=1:num_sensors
+    angle = initial_angles(i);
+    initial_loc = boundary_origin+boundary_radii(i)*[cos(angle);sin(angle)];
+    s = SensorClass(initial_loc,boundary_origin,boundary_radii(i),k);
+    sensors(i) = s;
+    sensor_locs(:, i) = s.returnPos();
+end
+
+% sensorLocs = [[0;1.5] [1.5;0] [-1.5;0] [0;-1.5]]; % By convention, locations should be an array of columns.
+% % sensorLocs = [[0;1.5] [-1.5;0] ]; % By convention, locations should be an array of columns.
+% 
 space_dimension = size(sensorLocs);
 space_dimension = space_dimension(1);
 
