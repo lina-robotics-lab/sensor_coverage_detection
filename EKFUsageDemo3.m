@@ -10,8 +10,8 @@ global num_sensors;
 global k;
 global boundary_origin;
 global b;
-global measure_noise_mag;
-global proc_noise_mag;
+global measure_noise_variance;
+global proc_noise_variance;
 global actual_loc; 
 global initial_location_estimation;
 setEKFUsageDemoParams();
@@ -46,13 +46,10 @@ dynamics =  EightShapeDynamics(omega, dt);
 % mobile sensors.
 
 mus = zeros(length(sensorLocs),1);
-measure_noise = measure_noise_mag*eye(length(sensorLocs));
-proc_noise = proc_noise_mag*eye(space_dimension);
+measure_noise = measure_noise_variance*eye(length(sensorLocs));
+proc_noise = proc_noise_variance*eye(space_dimension);
 meas = Measurement(b);
 meas.sensorLocs = sensorLocs;
-
-% Demo 1: directly call ekf.predict() for a series of times, see what
-% it produces.
 
 %  Create an ekf object
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
@@ -68,7 +65,7 @@ predicts(:,1)=initial_location_estimation;
 actual_locs(:,i)=actual_loc;
     
 for i = 2:max_iter
-        actual_loc=dynamics.stateUpdate(actual_loc);
+    actual_loc=dynamics.stateUpdateWithNoise(actual_loc);
     actual_locs(:,i)=actual_loc;
     
     % First, update the sensorLocs array in the measurement object
@@ -77,8 +74,8 @@ for i = 2:max_iter
     end
     meas.sensorLocs = sensorLocs;
     
-    % Second, make the measurement.
-    plant_measurement = meas.measureUpdate(actual_loc);
+    % Second, make the measurement, with noise added..
+    plant_measurement = meas.measureOutputWithNoise(actual_loc);
     
     % Third, make estimation of target location using ekf. Also update ekf.
     

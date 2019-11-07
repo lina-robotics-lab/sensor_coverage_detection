@@ -7,17 +7,17 @@ function setEKFUsageDemoParams()
     global k;
     global boundary_origin;
     global b;
-    global measure_noise_mag;
-    global proc_noise_mag;
+    global measure_noise_variance;
+    global proc_noise_variance;
     global actual_loc; 
     global initial_location_estimation;
-    dt = 0.1;
+    dt = 0.5;
 %     dt = 1;
 
     % omega = 100;
     omega = 0.1;
 
-    total_time = 62;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
+    total_time = 55;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
     max_iter= floor(total_time/dt);
 
     % Sensor Initialization
@@ -29,10 +29,11 @@ function setEKFUsageDemoParams()
     boundary_origin=[0;0];
     b = 1;
 %     b = -2;
-    measure_noise_mag = 1.5;
-    proc_noise_mag = 1e-5;
+    measure_noise_variance = 5e-2;
+%     proc_noise_variance = 1e-5;
+    proc_noise_variance = 1e-6;
 
     actual_loc = [0.01;0.01]; 
-%     initial_location_estimation=actual_loc;
-    initial_location_estimation=[0;1];
+    initial_location_estimation=actual_loc;
+%     initial_location_estimation=[-2;1];
 end

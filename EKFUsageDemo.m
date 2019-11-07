@@ -1,8 +1,7 @@
-close all;
-% This script demos how to use EKF to estimate the coordinate of a target 
-% moving in 8-shaped trajectory in 2-D.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+% % close all;
+% % This script demos how to use EKF to estimate the coordinate of a target 
+% % moving in 8-shaped trajectory in 2-D.
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 global dt;
 global omega;
 global total_time;
@@ -20,7 +19,9 @@ setEKFUsageDemoParams();
 sensors = SensorClass.empty(0,num_sensors);
 % Note: the sensors move along a boundary, which may not be a circled
 % centered at the target location.
-initial_angles = [0 0.3 0.2 0.1]; 
+initial_angles = [0 pi/2 pi 1.5*pi 2*pi]; 
+% initial_angles = [0 0.3 0.2 0.1]; 
+
 boundary_radii = 1.5*ones(1,num_sensors);
 sensorLocs = zeros(2, num_sensors);
 
@@ -32,9 +33,6 @@ for i=1:num_sensors
     sensorLocs(:, i) = s.returnPos();
 end
 
-% sensorLocs = [[0;1.5] [1.5;0] [-1.5;0] [0;-1.5]]; % By convention, locations should be an array of columns.
-% % sensorLocs = [[0;1.5] [-1.5;0] ]; % By convention, locations should be an array of columns.
-% 
 space_dimension = size(sensorLocs);
 space_dimension = space_dimension(1);
 
@@ -49,20 +47,10 @@ dynamics =  EightShapeDynamics(omega, dt);
 % mobile sensors.
 
 mus = zeros(length(sensorLocs),1);
-measure_noise = 0.05*eye(length(sensorLocs));
-proc_noise = 1e-5*eye(space_dimension);
-% b = 1;
-b = -2;
+measure_noise = measure_noise_mag^2*eye(length(sensorLocs));
+proc_noise = proc_noise_mag^2*eye(space_dimension);
 meas = Measurement(b);
 meas.sensorLocs = sensorLocs;
-
-
-
-% Demo 1: directly call ekf.predict() for a series of times, see what
-% it produces.
-actual_loc = [0.01;0.01]; 
-% initial_location_estimation=actual_loc;
-initial_location_estimation=[0;0.2];
 
 %  Create an ekf object
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
@@ -74,7 +62,10 @@ ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
 predicts = zeros(space_dimension,max_iter);
 actual_locs = zeros(space_dimension,max_iter);
 
-for i=1:max_iter
+predicts(:,1)=initial_location_estimation;
+actual_locs(:,i)=actual_loc;
+    
+for i = 2:max_iter
     actual_loc=dynamics.stateUpdate(actual_loc);
     actual_locs(:,i)=actual_loc;
     
@@ -89,21 +80,38 @@ for i=1:max_iter
     
     % Third, make estimation of target location using ekf. Also update ekf.
     
-    % Here we deliberately do not call correct function to update ekf.
-    
-    %ekf.correct(plant_measurement);
+%     ekf.correct(plant_measurement);
     estimated_loc=ekf.predict();
     predicts(:,i)=estimated_loc;
     
-    % Fourth, feed the estimated_loc to the sensors, use control rule to
-    % move the sensors.
-    move_sensors(sensors,estimated_loc);
+   
+    % We deliberately do not update the sensors here.
+    % move_sensors(sensors,estimated_loc);
+    
 end
 
+figure;
+scatter(predicts(1,1),predicts(2,1),'d','DisplayName','Initial Predicted Loc');
+hold on;
 plot(predicts(1,:),predicts(2,:),'DisplayName','Predicted Trajectory');
 hold on;
+scatter(predicts(1,end),predicts(2,end),'+','DisplayName','Final Predicted Loc');
+hold on;
+
 plot(actual_locs(1,:),actual_locs(2,:),'DisplayName','Actual Trajectory');
 hold on;
 plot_sensor_movement(sensors);
-title('No correction');
-legend();
+title('Trajectories with correction and static sensors');
+% legend();
+
+
+% nexttile;
+figure;
+error=sum((predicts-actual_locs).^2,1);
+plot(linspace(0,total_time,length(error)),error);
+title("Error with correction and static sensors,b="+b);
+% You should see after we incorporate ekf.correct(), the initially offed
+% estimation can be gradually corrected. You should also see some noisy
+% behavior if we tune up the noise magnitude in the beginning of this file.
+
+

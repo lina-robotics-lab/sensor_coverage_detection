@@ -30,9 +30,6 @@ classdef EightShapeDynamics < handle
             % This method takes in a state vector generate by a
             % eight_shape_dynamics with the same omega parameter,
             % return the state vector at t+obj.dt
-            
-          
-            
             if state(1)==0 && state(2)==0
                 disp("At location (0,0), the state update is undeterminable!");
             else
@@ -44,6 +41,28 @@ classdef EightShapeDynamics < handle
                 % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
                  
                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*state(2)/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+            end
+        end
+        
+        function new_state = stateUpdateWithNoise(obj,state,varargin)
+            global proc_noise_variance;
+                
+            % This method takes in a state vector generate by a
+            % eight_shape_dynamics with the same omega parameter,
+            % return the state vector at t+obj.dt
+            if state(1)==0 && state(2)==0
+                disp("At location (0,0), the state update is undeterminable!");
+            else
+                omega = obj.omega;
+                dt = obj.dt;
+                epsilon = 1e-8;
+
+                % Magical math derivation.
+                % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
+                 
+                new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*state(2)/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                noise = randn(size(new_state))*proc_noise_variance;
+                new_state = new_state+noise;
             end
         end
     end

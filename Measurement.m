@@ -39,13 +39,14 @@ classdef Measurement < handle
         
         function h = measure(obj,r)
 %             global measure_noise_mag;
+%             h=h+randn(1)*5e-2;
             % The formula for general measurement function used in the
             % Martinez, Bullo paper.
             r = min(max(r,obj.R0),obj.R1);
             
             h = (r-obj.c1)^obj.b+obj.c2;
 %             h=h+randn(1)*measure_noise_mag;
-%             h=h+randn(1)*5e-2;
+            
         end
         
         function y = measureUpdate(obj,state,varargin)
@@ -61,6 +62,25 @@ classdef Measurement < handle
             y = zeros(length(rs),1);
             for i=1:length(y)
                 y(i)=obj.measure(rs(i));
+            end
+        end
+        
+        function y = measureOutputWithNoise(obj,state,varargin)
+            % Given a state vector(essentially a location vector),
+            % return the vector of measurement
+            % output from sensors at sensorLocs, using the measure() method
+            % of this class.
+            
+            % We assume sensorLocs are row vectors, state is a column vector.
+            % The measurement output is a column vector.
+            
+            global measure_noise_variance;
+            rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
+            y = zeros(length(rs),1);
+            for i=1:length(y)
+                y(i)=obj.measure(rs(i));
+                noise=randn(1)*measure_noise_variance;
+                y(i)=y(i)+noise;
             end
         end
         function dhdq = measureJacobian(obj,state,varargin)
