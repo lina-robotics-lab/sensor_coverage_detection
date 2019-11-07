@@ -38,11 +38,14 @@ classdef Measurement < handle
         end
         
         function h = measure(obj,r)
+%             global measure_noise_mag;
             % The formula for general measurement function used in the
             % Martinez, Bullo paper.
             r = min(max(r,obj.R0),obj.R1);
             
             h = (r-obj.c1)^obj.b+obj.c2;
+%             h=h+randn(1)*measure_noise_mag;
+%             h=h+randn(1)*5e-2;
         end
         
         function y = measureUpdate(obj,state,varargin)

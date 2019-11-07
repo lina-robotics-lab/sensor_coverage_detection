@@ -3,29 +3,25 @@ close all;
 % moving in 8-shaped trajectory in 2-D.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-dt = 0.1;
-% dt = 1;
-
-% omega = 100;
-omega = 0.1;
-
-total_time = 62;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
-max_iter= floor(total_time/dt);
-
-% Sensor Initialization
-% Feel free to change the num_of_sensors and initial_angles here.
-num_sensors = 3;
-k = 1/4; % Control gain for equi-angular control rule.
-% k = 1/2;
+global dt;
+global omega;
+global total_time;
+global max_iter;
+global num_sensors;
+global k;
+global boundary_origin;
+global b;
+global measure_noise_mag;
+global proc_noise_mag;
+global actual_loc; 
+global initial_location_estimation;
+setEKFUsageDemoParams();
 % Initialization of sensors.
 sensors = SensorClass.empty(0,num_sensors);
 % Note: the sensors move along a boundary, which may not be a circled
 % centered at the target location.
-% boundary_origin=[0.8;0];
-boundary_origin=[0;0];
-initial_angles = 0.1*pi*rand(1,num_sensors); 
+initial_angles = [0 0.3 0.2 0.1]; 
 boundary_radii = 1.5*ones(1,num_sensors);
-
 sensorLocs = zeros(2, num_sensors);
 
 for i=1:num_sensors

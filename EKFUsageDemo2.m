@@ -14,12 +14,14 @@ global measure_noise_mag;
 global proc_noise_mag;
 global actual_loc; 
 global initial_location_estimation;
-
+setEKFUsageDemoParams();
 % Initialization of sensors.
 sensors = SensorClass.empty(0,num_sensors);
 % Note: the sensors move along a boundary, which may not be a circled
 % centered at the target location.
 initial_angles = [0 pi/2 pi 1.5*pi 2*pi]; 
+% initial_angles = [0 0.3 0.2 0.1]; 
+
 boundary_radii = 1.5*ones(1,num_sensors);
 sensorLocs = zeros(2, num_sensors);
 
@@ -63,7 +65,10 @@ ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
 predicts = zeros(space_dimension,max_iter);
 actual_locs = zeros(space_dimension,max_iter);
 
-for i = 1:max_iter
+predicts(:,1)=initial_location_estimation;
+actual_locs(:,i)=actual_loc;
+    
+for i = 2:max_iter
     actual_loc=dynamics.stateUpdate(actual_loc);
     actual_locs(:,i)=actual_loc;
     
@@ -93,13 +98,18 @@ for i = 1:max_iter
 end
 
 figure;
+scatter(predicts(1,1),predicts(2,1),'d','DisplayName','Initial Predicted Loc');
+hold on;
 plot(predicts(1,:),predicts(2,:),'DisplayName','Predicted Trajectory');
 hold on;
+scatter(predicts(1,end),predicts(2,end),'+','DisplayName','Final Predicted Loc');
+hold on;
+
 plot(actual_locs(1,:),actual_locs(2,:),'DisplayName','Actual Trajectory');
 hold on;
 plot_sensor_movement(sensors);
 title('Trajectories with correction and static sensors');
-legend();
+% legend();
 
 
 % nexttile;
