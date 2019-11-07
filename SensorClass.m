@@ -60,12 +60,10 @@ classdef SensorClass < handle
         
         function r = angleFinder(obj, neighbor_angle, own_angle)
             % Both neighbor_angle and own_angle are between 0 and 2*pi.
-            % The angle difference is always between 0 and pi.
             diff=abs(neighbor_angle-own_angle);
-            r=min(2*pi-diff,diff);
+            r=min(2*pi-diff,diff); % The angle difference r is always between 0 and pi.
         end
         function r=moveSensor(obj,cwNeighbor, ccwNeighbor,target_loc)
-%             target_loc=reshape(target_loc,1,2);
             cwDif = obj.angleFinder(cwNeighbor, obj.angle_to_target);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle_to_target);
              
@@ -95,9 +93,12 @@ classdef SensorClass < handle
     end
     
 end
-% function r=dist(x,y)
-%     r=sum((x-y).^2).^0.5;
-% end
+
+% This function returns the intersection point of a half-line, which starts from
+% target_loc in the direction of target_angle, with a circle, centered at
+% boundary_origin with radius=boundary_radius. The derivation of the
+% formula requires complex number manipulations, which can be found in the Solve_For_Intersection.png in the project
+% repository.
 function intersection=CircleIntersection(target_loc,target_angle,boundary_origin,boundary_radius)
     o = boundary_origin(1)+boundary_origin(2)*1j;
     t=target_loc(1)+target_loc(2)*1j;
@@ -106,7 +107,6 @@ function intersection=CircleIntersection(target_loc,target_angle,boundary_origin
     alpha = real(ot)+boundary_radius*sqrt(1-im^2);
     if imag(alpha)==0
         intersection = t+alpha*exp(1j*target_angle);
-        
         intersection=[real(intersection);imag(intersection)];
     else
 %         disp("NO SOLUTION! The target line does not intersect with the circle.");

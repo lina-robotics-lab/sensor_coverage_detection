@@ -26,14 +26,14 @@ boundary_origin=[0;0];
 initial_angles = 0.1*pi*rand(1,num_sensors); 
 boundary_radii = 1.5*ones(1,num_sensors);
 
-sensor_locs = zeros(2, num_sensors);
+sensorLocs = zeros(2, num_sensors);
 
 for i=1:num_sensors
     angle = initial_angles(i);
     initial_loc = boundary_origin+boundary_radii(i)*[cos(angle);sin(angle)];
     s = SensorClass(initial_loc,boundary_origin,boundary_radii(i),k);
     sensors(i) = s;
-    sensor_locs(:, i) = s.returnPos();
+    sensorLocs(:, i) = s.returnPos();
 end
 
 % sensorLocs = [[0;1.5] [1.5;0] [-1.5;0] [0;-1.5]]; % By convention, locations should be an array of columns.
