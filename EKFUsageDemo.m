@@ -12,7 +12,7 @@ omega = 0.1;
 total_time = 62;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 max_iter= floor(total_time/dt);
 
-% Sensor Initialization
+%% Sensor Initialization
 % Feel free to change the num_of_sensors and initial_angles here.
 num_sensors = 3;
 k = 1/4; % Control gain for equi-angular control rule.
@@ -42,6 +42,7 @@ end
 space_dimension = size(sensorLocs);
 space_dimension = space_dimension(1);
 
+%% Dynamics and Measurement
 % Create the dynamics object
 % Parameter for 8-shape movement.
 % Sampling interval for target location.
@@ -53,14 +54,14 @@ dynamics =  EightShapeDynamics(omega, dt);
 % mobile sensors.
 
 mus = zeros(length(sensorLocs),1);
-measure_noise = 0.05*eye(length(sensorLocs));
+measure_noise = 0.5*eye(length(sensorLocs));
 proc_noise = 1e-5*eye(space_dimension);
 % b = 1;
 b = -2;
 meas = Measurement(b);
 meas.sensorLocs = sensorLocs;
 
-
+%% EKF Intialization
 
 % Demo 1: directly call ekf.predict() for a series of times, see what
 % it produces.
@@ -76,12 +77,16 @@ ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
 % Remark: dynamics.stateUpdate and meas.measureUpdate are both object methods
 
 predicts = zeros(space_dimension,max_iter);
+predict_loc = initial_location_estimation;
 actual_locs = zeros(space_dimension,max_iter);
 
 for i=1:max_iter
+
     actual_loc=dynamics.stateUpdate(actual_loc);
     actual_locs(:,i)=actual_loc;
-    predicts(:,i)=ekf.predict();
+    predict_loc = ekf.predict();
+    predicts(:,i)=predict_loc;
+        
 end
 
 % tiledlayout(2,1);
@@ -99,7 +104,7 @@ title("Actual Trajectory");
 % it see the actual state.
 actual_loc = [0.01;0.01]; 
 % initial_location_estimation=actual_loc;
-initial_location_estimation=[-1;0.2];
+initial_location_estimation=[0;0.2];
 
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
 ekf.ProcessNoise = proc_noise;
@@ -107,9 +112,13 @@ ekf.MeasurementNoise = measure_noise;
 ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
 
 predicts = zeros(space_dimension,max_iter);
+predict_loc = initial_location_estimation;
 actual_locs = zeros(space_dimension,max_iter);
 
 for i = 1:max_iter
+        angles = zeros(1,num_sensors);
+   % Step 0: Update Target Location
+    
     actual_loc=dynamics.stateUpdate(actual_loc);
     actual_locs(:,i)=actual_loc;
     
@@ -120,8 +129,41 @@ for i = 1:max_iter
     % call ekf.predict() after calling ekf.correct(), the state of ekf will
     % be wrong!
     ekf.correct(plant_measurement);
-    predicts(:,i)=ekf.predict();
+    predict_loc = ekf.predict();
+    predicts(:,i)=predict_loc;
     
+    
+        % Enter sensor movement stage
+     % Step 1: measure target simultaneously, after which the angle state of
+   % each sensor is automatically updated.
+   for j=1:length(sensors)
+       angles(j)=sensors(j).measureTarget(predict_loc);
+       % The angle of each sensor is automatically updated after calling measureTarget().
+   end
+   
+   % Step 2: Sort the angles in order to obtain the angles of cw_neighbor(clockwise) and ccw_neighor(counter-clockwise).
+   % The angles increase in counter-clockwise direction by default.
+   [sorted_angles,sorted_indices] = sort(angles);
+   % Matlab sorting is in ascending order by default.
+   
+   % Step 3: move the sensors using predefined control rule.
+   for j = 1:length(sorted_indices)
+      curr_index = sorted_indices(j);
+      cw_Neighbor = sorted_angles(cyclic_mod(j-1,num_sensors));
+      ccw_Neighbor = sorted_angles(cyclic_mod(j+1,num_sensors));
+      
+      % Major difference to Static_Target: we need to calculate
+      % sensor_dist_to_target dynamically.
+      
+      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,target_loc); 
+   end
+   
+   % Step 4: Location update to the EKF
+   for i=1:num_sensors
+        s = sensors(i);
+        sensor_locs(:, i) = s.returnPos();
+   end
+   meas.sensorLocs = sensorLocs;
 end
 
 figure;
@@ -142,3 +184,30 @@ title("error");
 % You should see after we incorporate ekf.correct(), the initially offed
 % estimation can be gradually corrected. You should also see some noisy
 % behavior if we tune up the noise magnitude in the beginning of this file.
+
+%%%%%%%%%%%%%%Plot out sensor movement trajectories%%%%%%%%%%%%%%%%
+
+marker_size=100;
+plot(actual_locs(1:end,1),actual_locs(1:end,2),'DisplayName',"Target "+" Trajectory");
+hold on;
+    
+for i=1:num_sensors
+    s = sensors(i);
+    scatter(s.states(1,1),s.states(1,2),marker_size,'d','DisplayName',"Sensor "+i+" Init Loc");
+    hold on;
+    plot(s.states(1:end,1),s.states(1:end,2),'DisplayName',"Sensor "+i+" Trajectory");
+    hold on;
+    scatter(s.states(end,1),s.states(end,2),'filled','DisplayName',"Sensor "+i+" Final Loc");
+    hold on;
+end
+legend();
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Matlab uses 1-based indexing, which makes cyclic array indexing by a[mod(i,p)]not
+% directly available. But we can hack our way out as follows:
+function r=cyclic_mod(n,p)
+    r = p-mod(-n,p);
+end
+% The function behavior is the following: cyclic_mod(1,3)=1,cyclic_mod(2,3)=2, cyclic_mod(3,3)=3,
+% cyclic_mod(4,3)=1,cyclic_mod(5,3)=2...

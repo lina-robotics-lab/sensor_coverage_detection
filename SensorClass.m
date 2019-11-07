@@ -18,6 +18,9 @@ classdef SensorClass < handle
         
         boundary_origin=[0,0];
         boundary_r = 1.5;
+        
+        % EKF object
+        ekf = NaN;
     end
     
     methods
