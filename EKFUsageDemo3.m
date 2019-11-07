@@ -1,7 +1,7 @@
-% % close all;
-% % This script demos how to use EKF to estimate the coordinate of a target 
-% % moving in 8-shaped trajectory in 2-D.
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% close all;
+% This script demos how to use EKF to estimate the coordinate of a target 
+% moving in 8-shaped trajectory in 2-D.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 global dt;
 global omega;
 global total_time;
@@ -87,8 +87,8 @@ for i = 1:max_iter
     predicts(:,i)=estimated_loc;
     
    
-    % We deliberately do not update the sensors here.
-    % move_sensors(sensors,estimated_loc);
+    %Fourth, move the sensors w.r.t estimated_loc
+    move_sensors(sensors,estimated_loc);
     
 end
 
@@ -98,7 +98,7 @@ hold on;
 plot(actual_locs(1,:),actual_locs(2,:),'DisplayName','Actual Trajectory');
 hold on;
 plot_sensor_movement(sensors);
-title('Trajectories with correction and static sensors');
+title('Trajectories with correction and moving sensors');
 legend();
 
 
@@ -106,7 +106,7 @@ legend();
 figure;
 error=sum((predicts-actual_locs).^2,1);
 plot(linspace(0,total_time,length(error)),error);
-title("Error with correction and static sensors,b="+b);
+title("Error with correction and moving sensors,b="+b);
 % You should see after we incorporate ekf.correct(), the initially offed
 % estimation can be gradually corrected. You should also see some noisy
 % behavior if we tune up the noise magnitude in the beginning of this file.
