@@ -14,6 +14,7 @@ classdef Measurement < handle
         % sensorLocs is an array of sensor location required by
         % measureUpdate method.
         
+        measure_noise = 0.0005;
     end
     
     methods
@@ -42,7 +43,7 @@ classdef Measurement < handle
             % Martinez, Bullo paper.
             r = min(max(r,obj.R0),obj.R1);
             
-            h = (r-obj.c1)^obj.b+obj.c2;
+            h = (r-obj.c1)^obj.b+obj.c2 + normrnd(0, sqrt(obj.measure_noise));
         end
         
         function y = measureUpdate(obj,state,varargin)

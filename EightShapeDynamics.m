@@ -9,21 +9,26 @@ classdef EightShapeDynamics < handle
         
         dt = 0.1; % dt is required by stateUpdate method. It is the time 
                 % interval for stateUpdate.
+                
+        proc_noise = 0.05;
         
     end
     methods
-        function obj = EightShapeDynamics(omega,dt)
+        function obj = EightShapeDynamics(omega,dt, proc_noise)
           if nargin >= 1
             obj.omega = omega;
           end
           if nargin >= 2  
              obj.dt = dt;
           end
+          if nargin >= 3
+              obj.proc_noise = proc_noise;
+          end
         end
         function state = stateAt(obj,t)
            % A state vector is a 
            omega = obj.omega;
-           state = [sin(omega*t); sin(omega*t)*cos(omega*t)];
+           state = [sin(omega*t) + normrnd(0, sqrt(obj.proc_noise)); sin(omega*t)*cos(omega*t) + normrnd(0, sqrt(obj.proc_noise))];
         end
         
         function new_state = stateUpdate(obj,state,varargin)

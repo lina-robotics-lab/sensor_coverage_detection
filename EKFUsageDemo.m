@@ -26,14 +26,14 @@ boundary_origin=[0;0];
 initial_angles = 0.1*pi*rand(1,num_sensors); 
 boundary_radii = 1.5*ones(1,num_sensors);
 
-sensor_locs = zeros(2, num_sensors);
+sensorLocs = zeros(2, num_sensors);
 
 for i=1:num_sensors
     angle = initial_angles(i);
     initial_loc = boundary_origin+boundary_radii(i)*[cos(angle);sin(angle)];
     s = SensorClass(initial_loc,boundary_origin,boundary_radii(i),k);
     sensors(i) = s;
-    sensor_locs(:, i) = s.returnPos();
+    sensorLocs(:, i) = s.returnPos();
 end
 
 % sensorLocs = [[0;1.5] [1.5;0] [-1.5;0] [0;-1.5]]; % By convention, locations should be an array of columns.
@@ -43,23 +43,23 @@ space_dimension = size(sensorLocs);
 space_dimension = space_dimension(1);
 
 %% Dynamics and Measurement
-% Create the dynamics object
-% Parameter for 8-shape movement.
-% Sampling interval for target location.
-dynamics =  EightShapeDynamics(omega, dt);
-
 % Create the measurement object
 % Assume the sensors are placed at fixed locations.
 % In the future,we can dynamically change meas.sensorLocs to represent the movement of
 % mobile sensors.
 
 mus = zeros(length(sensorLocs),1);
-measure_noise = 0.5*eye(length(sensorLocs));
+measure_noise = 0.0005*eye(length(sensorLocs));
 proc_noise = 1e-5*eye(space_dimension);
 % b = 1;
 b = -2;
 meas = Measurement(b);
 meas.sensorLocs = sensorLocs;
+
+% Create the dynamics object
+% Parameter for 8-shape movement.
+% Sampling interval for target location.
+dynamics =  EightShapeDynamics(omega, dt, proc_noise);
 
 %% EKF Intialization
 
@@ -67,7 +67,7 @@ meas.sensorLocs = sensorLocs;
 % it produces.
 actual_loc = [0.01;0.01]; 
 % initial_location_estimation=actual_loc;
-initial_location_estimation=[0;0.2];
+initial_location_estimation=[0.01;0];
 
 %  Create an ekf object
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
@@ -161,7 +161,7 @@ for i = 1:max_iter
    % Step 4: Location update to the EKF
    for i=1:num_sensors
         s = sensors(i);
-        sensor_locs(:, i) = s.returnPos();
+        sensorLocs(:, i) = s.returnPos();
    end
    meas.sensorLocs = sensorLocs;
 end
