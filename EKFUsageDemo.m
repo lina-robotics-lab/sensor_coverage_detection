@@ -59,15 +59,14 @@ meas.sensorLocs = sensorLocs;
 % Create the dynamics object
 % Parameter for 8-shape movement.
 % Sampling interval for target location.
-dynamics =  EightShapeDynamics(omega, dt, proc_noise);
+dynamics =  EightShapeDynamics(omega, dt, 1e-5);
 
-%% EKF Intialization
 
-% Demo 1: directly call ekf.predict() for a series of times, see what
+%% Demo 1: directly call ekf.predict() for a series of times, see what
 % it produces.
 actual_loc = [0.01;0.01]; 
 % initial_location_estimation=actual_loc;
-initial_location_estimation=[0.01;0];
+initial_location_estimation=[0.1;0.1];
 
 %  Create an ekf object
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
@@ -93,18 +92,18 @@ end
 
 % nexttile;
 
-plot(predicts(1,:),predicts(2,:));
-title('Predicted Trajectory-No correction');
-% nexttile;
-figure;
-plot(actual_locs(1,:),actual_locs(2,:));
-title("Actual Trajectory");
+% plot(predicts(1,:),predicts(2,:));
+% title('Predicted Trajectory-No correction');
+% % nexttile;
+% figure;
+% plot(actual_locs(1,:),actual_locs(2,:));
+% title("Actual Trajectory");
 
-% Demo 2: continue the simulation, but call ekf.correct() to correct the state of ekf by letting
+%% Demo 2: continue the simulation, but call ekf.correct() to correct the state of ekf by letting
 % it see the actual state.
 actual_loc = [0.01;0.01]; 
 % initial_location_estimation=actual_loc;
-initial_location_estimation=[0;0.2];
+initial_location_estimation=[0.1;0.1];
 
 ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
 ekf.ProcessNoise = proc_noise;
@@ -155,7 +154,7 @@ for i = 1:max_iter
       % Major difference to Static_Target: we need to calculate
       % sensor_dist_to_target dynamically.
       
-      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,target_loc); 
+      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,actual_loc); 
    end
    
    % Step 4: Location update to the EKF
@@ -180,13 +179,13 @@ title("Actual Trajectory");
 figure;
 error=sum((predicts-actual_locs).^2,1);
 plot(linspace(0,total_time,length(error)),error);
-title("error");
+title("error - With Movement");
 % You should see after we incorporate ekf.correct(), the initially offed
 % estimation can be gradually corrected. You should also see some noisy
 % behavior if we tune up the noise magnitude in the beginning of this file.
 
 %%%%%%%%%%%%%%Plot out sensor movement trajectories%%%%%%%%%%%%%%%%
-
+figure;
 marker_size=100;
 plot(actual_locs(1:end,1),actual_locs(1:end,2),'DisplayName',"Target "+" Trajectory");
 hold on;
@@ -201,6 +200,61 @@ for i=1:num_sensors
     hold on;
 end
 legend();
+
+%% Demo 3: Try doing the same EKF without sensor movement
+actual_loc = [0.01;0.01]; 
+% initial_location_estimation=actual_loc;
+initial_location_estimation=[0.1;0.1];
+
+% Setup EKF
+ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdate,initial_location_estimation);
+ekf.ProcessNoise = proc_noise;
+ekf.MeasurementNoise = measure_noise;
+ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
+
+predicts = zeros(space_dimension,max_iter);
+predict_loc = initial_location_estimation;
+actual_locs = zeros(space_dimension,max_iter);
+
+% Set sensor locations
+sensorLocs = [[0;1.5] [-1.5;0] [1.5;0]];
+meas.sensorLocs = sensorLocs;
+
+%Iteration loop
+for i = 1:max_iter
+    angles = zeros(1,num_sensors);
+   % Step 0: Update Target Location
+    
+    actual_loc=dynamics.stateUpdate(actual_loc);
+    actual_locs(:,i)=actual_loc;
+    
+    plant_measurement = meas.measureUpdate(actual_loc);
+    
+    % Important: after calling ekf.correct(), we must also call
+    % ekf.predict() for the ekf states to be properly updated! If we do not
+    % call ekf.predict() after calling ekf.correct(), the state of ekf will
+    % be wrong!
+    ekf.correct(plant_measurement);
+    predict_loc = ekf.predict();
+    predicts(:,i)=predict_loc;
+    
+end
+
+figure;
+% tiledlayout(3,1);
+% nexttile;
+plot(predicts(1,:),predicts(2,:));
+title('Predicted Trajectory-No Sensor Movement');
+% nexttile;
+figure;
+plot(actual_locs(1,:),actual_locs(2,:));
+title("Actual Trajectory");
+
+% nexttile;
+figure;
+error=sum((predicts-actual_locs).^2,1);
+plot(linspace(0,total_time,length(error)),error);
+title("error - No movement");
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

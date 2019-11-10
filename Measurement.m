@@ -19,7 +19,7 @@ classdef Measurement < handle
     
     methods
         
-        function obj=Measurement(b,c1,c2,R1,R0)
+        function obj=Measurement(b,c1,c2,R1,R0, measure_noise)
             if exist('b','var')
               obj.b = b;            
             end
@@ -35,7 +35,9 @@ classdef Measurement < handle
             if exist('R0','var')
               obj.R0 = R0;            
             end
-            
+            if exist('measure_noise','var')
+              obj.measure_noise = measure_noise;            
+            end
         end
         
         function h = measure(obj,r)
