@@ -14,11 +14,12 @@ classdef Measurement < handle
         % sensorLocs is an array of sensor location required by
         % measureUpdate method.
         
+        measure_noise = 0.0005;
     end
     
     methods
         
-        function obj=Measurement(b,c1,c2,R1,R0)
+        function obj=Measurement(b,measure_noise,c1,c2,R1,R0)
             if exist('b','var')
               obj.b = b;            
             end
@@ -34,22 +35,46 @@ classdef Measurement < handle
             if exist('R0','var')
               obj.R0 = R0;            
             end
-            
+            if exist('measure_noise','var')
+              obj.measure_noise = measure_noise;            
+            end
         end
         
-        function h = measure(obj,r)
-%             global measure_noise_mag;
-%             h=h+randn(1)*5e-2;
+        function h = measure(obj,r,noisy)
+            % noisy is a 0-1 variable which decides whether the measurement
+            % outcome should contain noise.
+            
             % The formula for general measurement function used in the
             % Martinez, Bullo paper.
             r = min(max(r,obj.R0),obj.R1);
             
-            h = (r-obj.c1)^obj.b+obj.c2;
-%             h=h+randn(1)*measure_noise_mag;
-            
+            h = (r-obj.c1)^obj.b+obj.c2 + noisy*normrnd(0, sqrt(obj.measure_noise));
         end
         
-        function y = measureUpdate(obj,state,varargin)
+        function y = measureUpdatePerfect(obj,state,varargin)
+            % No measurement noise is generated. This is the function
+            % handle to pass to the EKF.
+            
+            % Given a state vector(essentially a location vector),
+            % return the vector of perfect measurement
+            % output from sensors at sensorLocs, using the measure() method
+            % of this class.
+            
+            
+            % We assume sensorLocs are row vectors, state is a column vector.
+            % The measurement output is a column vector.
+    
+            rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
+            y = zeros(length(rs),1);
+            for i=1:length(y)
+                y(i)=obj.measure(rs(i),false);% No measurement noise is generated.
+            end
+        end
+        function y = measureUpdateWithNoise(obj,state,varargin)
+            % Measurement noise will be added. Only use this method to
+            % generate measurement data in the simulation.
+            % Do NOT pass this as a function handle to the EKF.
+            
             % Given a state vector(essentially a location vector),
             % return the vector of measurement
             % output from sensors at sensorLocs, using the measure() method
@@ -61,28 +86,11 @@ classdef Measurement < handle
             rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
             y = zeros(length(rs),1);
             for i=1:length(y)
-                y(i)=obj.measure(rs(i));
+                y(i)=obj.measure(rs(i),true);    % Measurement noise will be added. Only use this method to
+            % generate measurement data in the simulation.
             end
         end
         
-        function y = measureOutputWithNoise(obj,state,varargin)
-            % Given a state vector(essentially a location vector),
-            % return the vector of measurement
-            % output from sensors at sensorLocs, using the measure() method
-            % of this class.
-            
-            % We assume sensorLocs are row vectors, state is a column vector.
-            % The measurement output is a column vector.
-            
-            global measure_noise_variance;
-            rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
-            y = zeros(length(rs),1);
-            for i=1:length(y)
-                y(i)=obj.measure(rs(i));
-                noise=randn(1)*measure_noise_variance;
-                y(i)=y(i)+noise;
-            end
-        end
         function dhdq = measureJacobian(obj,state,varargin)
             b= obj.b;
             rs = sqrt(sum((obj.sensorLocs-state).^2,1))';

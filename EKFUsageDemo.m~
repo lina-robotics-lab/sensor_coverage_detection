@@ -7,7 +7,7 @@ setEKFUsageDemoParams(); % Assign the simulation parameters with default values.
 global enable_sensor_movement;
 global omega;
 
-omega=1e-4; % The case when omega being small is a sanity check, that the target barely moves.
+omega=1e-4; % The case when omega being small is a sanity check
 % omega=0.1;
 
 enable_sensor_movement=true;
