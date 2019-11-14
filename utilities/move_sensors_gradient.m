@@ -19,7 +19,7 @@ function move_sensors_gradient(sensors,target_loc,plant_measurement)
    for k=1:num_sensors
       [dLdeta,dLdr]= partial_derivatives(h,r_hat,k,num_sensors);
       gradient=dLdr*r_hat(:,k)+(dLdeta/r(k))*t_hat(:,k);
-      sensors(k).moveSensorGradient(gradient,0.01); 
+      sensors(k).moveSensorGradient(gradient,0.1); 
    end
    
     function [dLdeta,dLdr]=partial_derivatives(h,r_hat,k,num_sensors)
@@ -34,8 +34,8 @@ function move_sensors_gradient(sensors,target_loc,plant_measurement)
         sum2 = 0;
         for j=1:num_sensors
             rkrj=min(r_hat(:,k)'*r_hat(:,j),1);
-        %             direction = sign(det([r_hat(:,j),r_hat(:,k)]));
-           direction = sign(det([r_hat(:,j),r_hat(:,k)]));
+                    direction = sign(det([r_hat(:,j),r_hat(:,k)]));
+%            direction = sign(det([r_hat(:,j),r_hat(:,k)]));
         
             sum1=sum1+h(j)^(2-2/b)*rkrj*sqrt(1-rkrj^2)*direction;
             sum2=sum2+h(j)^(2-2/b)*(1-rkrj^2);

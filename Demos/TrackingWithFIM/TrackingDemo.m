@@ -11,7 +11,7 @@ global measure_noise_variance;
 global proc_noise_variance;
 global initial_target_loc; 
 global initial_location_estimation;
-
+global enable_sensor_movement;
 close all;
 setEKFUsageDemoDefaultParams(); % Assign the simulation parameters with default values.
 
@@ -21,11 +21,11 @@ setEKFUsageDemoDefaultParams(); % Assign the simulation parameters with default 
  % The case when omega being small is a sanity check, that the target barely moves.
 omega=1e-1;
 % omega=0.1;
-b=1;
+b=-2;
 total_time = 60;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 dt = 1;
 max_iter= floor(total_time/dt); 
-
+num_sensors=2;
 
 enable_sensor_movement=true;
 [predicts,actual_locs,sensors]=EKF_MovingSensor(@move_sensors_gradient);
