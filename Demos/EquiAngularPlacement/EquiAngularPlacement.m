@@ -28,7 +28,7 @@ max_iter= floor(total_time/dt);
 
 
 enable_sensor_movement=true;
-[predicts,actual_locs,sensors]=EKF_MovingSensor();
+[predicts,actual_locs,sensors]=EKF_MovingSensor(@move_sensors_equi_angular);
 
 plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement);
 
@@ -38,34 +38,9 @@ hold on;
 
 
 enable_sensor_movement=false;
-[predicts,actual_locs,sensors]=EKF_MovingSensor();
+[predicts,actual_locs,sensors]=EKF_MovingSensor(@move_sensors_equi_angular);
 plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement);
 legend();
 
 
 plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement);
-
-
-function plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement)
-    figure;
-    scatter(predicts(1,1),predicts(2,1),'d','DisplayName','Initial Predicted Loc');
-    hold on;
-    plot(predicts(1,:),predicts(2,:),'DisplayName','Predicted Trajectory');
-    hold on;
-    scatter(predicts(1,end),predicts(2,end),'+','DisplayName','Final Predicted Loc');
-    hold on;
-
-    plot(actual_locs(1,:),actual_locs(2,:),'DisplayName','Actual Trajectory');
-    hold on;
-    plot_sensor_movement(sensors);
-    title("Trajectories, b="+b+", Moving Sensors:"+enable_sensor_movement);
-end
-
-function plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement)
-   
-    error=sum((predicts-actual_locs).^2,1);
-    plot(linspace(0,total_time,length(error)),error,'DisplayName',"Moving Sensors:"+enable_sensor_movement);
-    title("Estimation Error. b="+b);
-    xlabel("Time:seconds")
-    ylabel("Error")
-end

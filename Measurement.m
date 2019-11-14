@@ -49,6 +49,7 @@ classdef Measurement < handle
             r = min(max(r,obj.R0),obj.R1);
             
             h = (r-obj.c1)^obj.b+obj.c2 + noisy*normrnd(0, sqrt(obj.measure_noise));
+            h = max(h,0);% Ensure a non-negative value is returned.
         end
         
         function y = measureUpdatePerfect(obj,state,varargin)

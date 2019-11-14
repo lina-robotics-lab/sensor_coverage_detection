@@ -3,7 +3,7 @@
 % moving in 8-shaped trajectory in 2-D.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [predicts,actual_locs,sensors]=EKF_MovingSensor()
+function [predicts,actual_locs,sensors]=EKF_MovingSensor(move_sensor_function)
     global dt;
     global omega;
     global max_iter;
@@ -96,7 +96,7 @@ function [predicts,actual_locs,sensors]=EKF_MovingSensor()
 
         %Fourth, move the sensors w.r.t estimated_loc
         if enable_sensor_movement
-            move_sensors(sensors,estimated_loc);
+            move_sensor_function(sensors,estimated_loc,plant_measurement);
         end
 
     end

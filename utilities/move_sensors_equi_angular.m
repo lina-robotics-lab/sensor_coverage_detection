@@ -1,4 +1,4 @@
-function move_sensors(sensors,target_loc)
+function move_sensors_equi_angular(sensors,target_loc,plant_measurement)
    num_sensors =length(sensors);
    angles = zeros(1,num_sensors);
    % Step 1: measure target simultaneously, after which the angle state of
@@ -22,6 +22,6 @@ function move_sensors(sensors,target_loc)
       % Major difference to Static_Target: we need to calculate
       % sensor_dist_to_target dynamically.
       
-      sensors(curr_index).moveSensor(cw_Neighbor, ccw_Neighbor,target_loc); 
+      sensors(curr_index).moveSensorEquiAngular(cw_Neighbor, ccw_Neighbor,target_loc); 
    end
 end

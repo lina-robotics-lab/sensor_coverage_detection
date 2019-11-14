@@ -63,7 +63,16 @@ classdef SensorClass < handle
             diff=abs(neighbor_angle-own_angle);
             r=min(2*pi-diff,diff); % The angle difference r is always between 0 and pi.
         end
-        function r=moveSensor(obj,cwNeighbor, ccwNeighbor,target_loc)
+        
+        function r=moveSensorGradient(obj,gradient,step_size)
+            if norm(gradient)~=0
+                obj.curr_loc=obj.curr_loc+step_size*gradient/norm(gradient);
+            end
+            assert(~isnan(obj.curr_loc(1)));
+            obj.states =  [obj.states; [obj.curr_loc', NaN, obj.time]];
+            r = obj.curr_loc;
+        end
+        function r=moveSensorEquiAngular(obj,cwNeighbor, ccwNeighbor,target_loc)
             cwDif = obj.angleFinder(cwNeighbor, obj.angle_to_target);
             ccwDif = obj.angleFinder(ccwNeighbor, obj.angle_to_target);
              
