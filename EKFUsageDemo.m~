@@ -19,32 +19,23 @@ setEKFUsageDemoDefaultParams(); % Assign the simulation parameters with default 
 % current experiment.
 
  % The case when omega being small is a sanity check, that the target barely moves.
-omega=1e-4;
 % omega=0.1;
-b=1;
-total_time = 100;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
-dt = 0.3;
-max_iter= floor(total_time/dt); 
+total_time;
+b=-2;
 
 
 enable_sensor_movement=true;
 [predicts,actual_locs,sensors]=EKF_MovingSensor();
+plot_trajectories(predicts,actual_locs,sensors);
 
-plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement);
 
+% nexttile;
 figure;
-plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement);
-hold on;
-
-
-enable_sensor_movement=false;
-[predicts,actual_locs,sensors]=EKF_MovingSensor();
-plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement);
-legend();
-
-
-plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement);
-
+error=sum((predicts-actual_locs).^2,1);
+plot(linspace(0,total_time,length(error)),error);
+title("Estimation Error. b="+b+", Moving Sensors:"+enable_sensor_movement);
+xlabel("Time:seconds")
+ylabel("Error")
 
 function plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement)
     figure;
@@ -61,11 +52,9 @@ function plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement
     title("Trajectories, b="+b+", Moving Sensors:"+enable_sensor_movement);
 end
 
-function plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement)
-   
-    error=sum((predicts-actual_locs).^2,1);
-    plot(linspace(0,total_time,length(error)),error,'DisplayName',"Moving Sensors:"+enable_sensor_movement);
-    title("Estimation Error. b="+b);
-    xlabel("Time:seconds")
-    ylabel("Error")
-end
+% You should see after we incorporate ekf.correct(), the initially offed
+% estimation can be gradually corrected. You should also see some noisy
+% behavior if we tune up the noise magnitude in the beginning of this file.
+
+% enable_sensor_movement=false;
+% EKF_MovingSensor;
