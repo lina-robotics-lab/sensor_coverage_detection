@@ -60,12 +60,14 @@ classdef Measurement < handle
             % return the vector of perfect measurement
             % output from sensors at sensorLocs, using the measure() method
             % of this class.
-            
-            
+                        
             % We assume sensorLocs are row vectors, state is a column vector.
             % The measurement output is a column vector.
-    
-            rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
+            
+            
+            s = state(end-1:end); % Accomodate for the changed 8-shape dynamics.
+            
+            rs = sqrt(sum((obj.sensorLocs-s).^2,1))';
             y = zeros(length(rs),1);
             for i=1:length(y)
                 y(i)=obj.measure(rs(i),false);% No measurement noise is generated.
@@ -84,7 +86,9 @@ classdef Measurement < handle
             % We assume sensorLocs are row vectors, state is a column vector.
             % The measurement output is a column vector.
     
-            rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
+            s = state(end-1:end); % Accomodate for the changed 8-shape dynamics.
+            
+            rs = sqrt(sum((obj.sensorLocs-s).^2,1))';
             y = zeros(length(rs),1);
             for i=1:length(y)
                 y(i)=obj.measure(rs(i),true);    % Measurement noise will be added. Only use this method to
@@ -92,11 +96,12 @@ classdef Measurement < handle
             end
         end
         
-        function dhdq = measureJacobian(obj,state,varargin)
-            b= obj.b;
-            rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
-            dhdq=b*rs.^(b-2).* (state-obj.sensorLocs)';
-        end
+%         function dhdq = measureJacobian(obj,state,varargin)
+%             
+%             b= obj.b;
+%             rs = sqrt(sum((obj.sensorLocs-state).^2,1))';
+%             dhdq=b*rs.^(b-2).* (state-obj.sensorLocs)';
+%         end
         
     end
 end

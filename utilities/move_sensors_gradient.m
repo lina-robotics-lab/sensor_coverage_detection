@@ -1,4 +1,5 @@
 function move_sensors_gradient(sensors,target_loc,plant_measurement)
+   global descent_step_size;
    num_sensors =length(sensors);
    p=zeros(2,num_sensors);
    h=plant_measurement;
@@ -19,7 +20,7 @@ function move_sensors_gradient(sensors,target_loc,plant_measurement)
    for k=1:num_sensors
       [dLdeta,dLdr]= partial_derivatives(h,r_hat,k,num_sensors);
       gradient=dLdr*r_hat(:,k)+(dLdeta/r(k))*t_hat(:,k);
-      sensors(k).moveSensorGradient(gradient,0.1); 
+      sensors(k).moveSensorGradient(gradient,descent_step_size); 
    end
    
     function [dLdeta,dLdr]=partial_derivatives(h,r_hat,k,num_sensors)

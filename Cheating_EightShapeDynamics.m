@@ -3,7 +3,7 @@
 % >> dynamics = EightShapeDynamics(omega,dt)
 % >> dynamics.stateAt(t)
 % >> dynamics.stateUpdate(state)
-classdef EightShapeDynamics < handle
+classdef Cheating_EightShapeDynamics < handle
     properties
         omega = 0.1; % omega is the revolving frequency of the curve.
         
@@ -12,7 +12,7 @@ classdef EightShapeDynamics < handle
         t = 0;
     end
     methods
-        function obj = EightShapeDynamics(omega,dt)
+        function obj = Cheating_EightShapeDynamics(omega,dt)
           if nargin >= 1
             obj.omega = omega;
           end
@@ -25,21 +25,18 @@ classdef EightShapeDynamics < handle
            omega = obj.omega;
            state = [sin(omega*t); sin(omega*t)*cos(omega*t)];
         end
+        function updateTime(obj)
+           obj.t=obj.t+obj.dt;
+        end
+     
+        function resetTime(obj)
+           obj.t=0;
+        end
         
         function new_state = stateUpdate(obj,state,varargin)
-            % This method takes in a state vector generate by a
-            % eight_shape_dynamics with the same omega parameter,
-            % return the state vector at t+obj.dt
-                omega = obj.omega;
-                dt = obj.dt;
-                epsilon = 0;
+                 phase = obj.omega*obj.t;
+                 new_state = [sin(phase);sin(phase)*cos(phase)];
 
-                % Magical math derivation.
-                % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
-                 
-                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
-             
-            
         end
         
         function new_state = stateUpdateWithNoise(obj,state,varargin)
@@ -48,14 +45,9 @@ classdef EightShapeDynamics < handle
             % This method takes in a state vector generate by a
             % eight_shape_dynamics with the same omega parameter,
             % return the state vector at t+obj.dt
-                omega = obj.omega;
-                dt = obj.dt;
-                epsilon = 0;
+                 phase = obj.omega*obj.t;
+                 new_state = [sin(phase);sin(phase)*cos(phase)];
 
-                % Magical math derivation.
-                % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
-                 
-                new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
                 noise = randn(size(new_state))*proc_noise_variance;
                 new_state = new_state+noise;
           

@@ -11,7 +11,9 @@ function setEKFUsageDemoDefaultParams()
     global proc_noise_variance;
     global initial_target_loc; 
     global initial_location_estimation;
-    dt = 0.5;
+    global descent_step_size;
+    descent_step_size=0.1;
+    dt = 1;
  
     omega = 0.1;
 
@@ -26,8 +28,10 @@ function setEKFUsageDemoDefaultParams()
     b = 1;
     measure_noise_variance = 5e-2;
     proc_noise_variance = 1e-5;
-
-    initial_target_loc = [0.01;0.01]; 
+   
+    a0=1.001*pi;
+    initial_target_loc = [a0;sin(a0);sin(a0)*cos(a0)]; 
+%     initial_target_loc = [sin(a0);sin(a0)*cos(a0)]; 
     initial_location_estimation=initial_target_loc;
 
 end

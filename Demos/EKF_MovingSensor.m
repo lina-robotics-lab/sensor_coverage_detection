@@ -3,7 +3,7 @@
 % moving in 8-shaped trajectory in 2-D.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [predicts,actual_locs,sensors]=EKF_MovingSensor(move_sensor_function)
+function [predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(move_sensor_function)
     global dt;
     global omega;
     global max_iter;
@@ -22,8 +22,8 @@ function [predicts,actual_locs,sensors]=EKF_MovingSensor(move_sensor_function)
     % Note: the sensors move along a boundary, which may not be a circled
     % centered at the target location.
 
-    initial_angles = pi+0.05*(0.5-rand(num_sensors)); 
-%     initial_angles=2*pi/num_sensors * [1:num_sensors];
+%     initial_angles = pi+0.05*(0.5-rand(num_sensors)); 
+    initial_angles=2*pi/num_sensors * [1:num_sensors];
 
     boundary_radii = 1.5*ones(1,num_sensors);
     sensorLocs = zeros(2, num_sensors);
@@ -42,8 +42,10 @@ function [predicts,actual_locs,sensors]=EKF_MovingSensor(move_sensor_function)
     % Create the dynamics object
     % Parameter for 8-shape movement.
     % Sampling interval for target location.
-    dynamics =  EightShapeDynamics(omega, dt);
-
+%     dynamics =  EightShapeDynamics(omega, dt);
+    dynamics =  Revised_EightShapeDynamics(omega, dt);
+%     dynamics = Cheating_EightShapeDynamics(omega,dt);
+    
     % Create the measurement object
     % Assume the sensors are placed at fixed locations.
     % In the future,we can dynamically change meas.sensorLocs to represent the movement of
@@ -51,7 +53,7 @@ function [predicts,actual_locs,sensors]=EKF_MovingSensor(move_sensor_function)
 
     mus = zeros(length(sensorLocs),1);
     measure_noise = measure_noise_variance*eye(length(sensorLocs));
-    proc_noise = proc_noise_variance*eye(space_dimension);
+    proc_noise = proc_noise_variance*eye(length(initial_target_loc));
     meas = Measurement(b,measure_noise_variance);
     meas.sensorLocs = sensorLocs;
 
@@ -59,20 +61,21 @@ function [predicts,actual_locs,sensors]=EKF_MovingSensor(move_sensor_function)
     ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdatePerfect,initial_location_estimation);
     ekf.ProcessNoise = proc_noise;
     ekf.MeasurementNoise = measure_noise;
-    ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
+%     ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
     % Remark: dynamics.stateUpdate and meas.measureUpdate are both object methods
 
     predicts = zeros(space_dimension,max_iter);
-    actual_locs = zeros(space_dimension,max_iter);
+    predicts(:,1)=initial_location_estimation(end-1:end);
 
-    predicts(:,1)=initial_location_estimation;
     actual_loc=initial_target_loc;
-    actual_locs(:,1)=actual_loc;
+    actual_locs = zeros(space_dimension,max_iter);
+    actual_locs(:,1)=actual_loc(end-1:end);
 
+    plant_measurements=[];
+%     dynamics.resetTime();
     for i = 2:max_iter
-%         actual_loc=dynamics.stateUpdateWithNoise(actual_loc);
        actual_loc=dynamics.stateUpdate(actual_loc); % We use original state update here so that the actual trajectory does not cramp up.
-       actual_locs(:,i)=actual_loc;
+       actual_locs(:,i)=actual_loc(end-1:end);
 
         % First, update the sensorLocs array in the measurement object
         for j=1:num_sensors
@@ -82,25 +85,24 @@ function [predicts,actual_locs,sensors]=EKF_MovingSensor(move_sensor_function)
 
         % Second, make the measurement, with noise added..
         plant_measurement = meas.measureUpdateWithNoise(actual_loc);
-
+        plant_measurements = [plant_measurements,plant_measurement];
         % Third, make estimation of target location using ekf. Also update ekf.
-
         % Important: after calling ekf.correct(), we must also call
         % ekf.predict() for the ekf states to be properly updated! If we do not
         % call ekf.predict() after calling ekf.correct(), the state of ekf will
         % be wrong!
         ekf.correct(plant_measurement);
         estimated_loc=ekf.predict();
-        predicts(:,i)=estimated_loc;
+        predicts(:,i)=estimated_loc(end-1:end);
 
 
         %Fourth, move the sensors w.r.t estimated_loc
         if enable_sensor_movement
-            move_sensor_function(sensors,estimated_loc,plant_measurement);
+            move_sensor_function(sensors,estimated_loc(end-1:end),plant_measurement);
         end
-
+%         dynamics.updateTime();
     end
-        
+%    plant_measurements;     
 end
 
 
