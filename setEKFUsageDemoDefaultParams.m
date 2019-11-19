@@ -17,7 +17,7 @@ function setEKFUsageDemoDefaultParams()
  
     omega = 0.1;
 
-    total_time = 50;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
+    total_time = 60;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
     max_iter= floor(total_time/dt);
 
     % Sensor Initialization
@@ -29,7 +29,7 @@ function setEKFUsageDemoDefaultParams()
     measure_noise_variance = 5e-2;
     proc_noise_variance = 1e-5;
    
-    a0=1.001*pi;
+    a0=0.1;
     initial_target_loc = [a0;sin(a0);sin(a0)*cos(a0)]; 
 %     initial_target_loc = [sin(a0);sin(a0)*cos(a0)]; 
     initial_location_estimation=initial_target_loc;

@@ -32,12 +32,18 @@ classdef EightShapeDynamics < handle
             % return the state vector at t+obj.dt
                 omega = obj.omega;
                 dt = obj.dt;
-                epsilon = 0;
+                epsilon = 1e-8;
 
                 % Magical math derivation.
                 % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
-                 
-                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                if state(1)==0
+                    new_state = [sin(omega*dt);sin(omega*dt)*cos(omega*dt)];
+                else
+                    
+                    new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*abs(cos(asin(state(1))))*sign(state(1)*state(2));state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+%                     new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                end
+%                  new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
              
             
         end
@@ -50,13 +56,19 @@ classdef EightShapeDynamics < handle
             % return the state vector at t+obj.dt
                 omega = obj.omega;
                 dt = obj.dt;
-                epsilon = 0;
+                epsilon = 1e-8;
 
                 % Magical math derivation.
                 % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
-                 
-                new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
-                noise = randn(size(new_state))*proc_noise_variance;
+                if state(1)==0
+                    new_state = [sin(omega*dt);sin(omega*dt)*cos(omega*dt)];
+                else
+                  new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*abs(cos(asin(state(1))))*sign(state(1)*state(2));state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+%                                   new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+
+                end              
+%                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                noise = normrnd(0,sqrt(proc_noise_variance),size(new_state));
                 new_state = new_state+noise;
           
         end

@@ -11,6 +11,8 @@ global measure_noise_variance;
 global proc_noise_variance;
 global initial_target_loc; 
 global initial_location_estimation;
+global enable_sensor_movement;
+
 
 close all;
 setEKFUsageDemoDefaultParams(); % Assign the simulation parameters with default values.
@@ -22,25 +24,25 @@ setEKFUsageDemoDefaultParams(); % Assign the simulation parameters with default 
 % omega=1e-4;
 omega=0.1;
 b=1;
-total_time = 480;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
-dt = 1;
+total_time = 60;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
+dt = 0.1;
 max_iter= floor(total_time/dt); 
-measure_noise_variance=5e-2;
+measure_noise_variance=10e-2;
 k=1/4;
 enable_sensor_movement=true;
-[predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(@move_sensors_equi_angular);
+[corrects_1,predicts_1,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(@move_sensors_equi_angular);
 
 plot(2:max_iter,plant_measurements);
 
-plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement);
+plot_trajectories(predicts_1,actual_locs,sensors,b,enable_sensor_movement);
 legend();
 figure;
-plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement);
+plot_error(predicts_1,actual_locs,total_time,b,enable_sensor_movement);
 hold on;
 
 
 enable_sensor_movement=false;
-[predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(@move_sensors_equi_angular);
+[corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(@move_sensors_equi_angular);
 plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement);
 legend();
 

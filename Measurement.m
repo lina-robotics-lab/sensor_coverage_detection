@@ -47,8 +47,8 @@ classdef Measurement < handle
             % The formula for general measurement function used in the
             % Martinez, Bullo paper.
             r = min(max(r,obj.R0),obj.R1);
-            
-            h = (r-obj.c1)^obj.b+obj.c2 + noisy*normrnd(0, sqrt(obj.measure_noise));
+            noise=normrnd(0, sqrt(obj.measure_noise));
+            h = (r-obj.c1)^obj.b+obj.c2 + noisy*noise;
             h = max(h,0);% Ensure a non-negative value is returned.
         end
         

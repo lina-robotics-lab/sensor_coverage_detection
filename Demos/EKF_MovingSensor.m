@@ -3,7 +3,7 @@
 % moving in 8-shaped trajectory in 2-D.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(move_sensor_function)
+function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(move_sensor_function)
     global dt;
     global omega;
     global max_iter;
@@ -65,44 +65,46 @@ function [predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(move
     % Remark: dynamics.stateUpdate and meas.measureUpdate are both object methods
 
     predicts = zeros(space_dimension,max_iter);
-    predicts(:,1)=initial_location_estimation(end-1:end);
-
+    corrects = zeros(space_dimension,max_iter);
+    residuals = zeros(num_sensors,max_iter);
+ 
     actual_loc=initial_target_loc;
     actual_locs = zeros(space_dimension,max_iter);
-    actual_locs(:,1)=actual_loc(end-1:end);
 
     plant_measurements=[];
-%     dynamics.resetTime();
+    predicts(:,1)=ekf.State(end-1:end);
     for i = 2:max_iter
-       actual_loc=dynamics.stateUpdate(actual_loc); % We use original state update here so that the actual trajectory does not cramp up.
-       actual_locs(:,i)=actual_loc(end-1:end);
+        % Make a prediction about incoming state based on current corrected
+        % ekf state.
+        ekf.predict();
+        predicts(:,i)=ekf.State(end-1:end);
 
+        actual_loc=dynamics.stateUpdate(actual_loc); % We use original state update here so that the actual trajectory does not cramp up.
+        actual_locs(:,i)=actual_loc(end-1:end);
+     
         % First, update the sensorLocs array in the measurement object
         for j=1:num_sensors
             sensorLocs(:, j) = sensors(j).returnPos();
         end
-        meas.sensorLocs = sensorLocs;
+        meas.sensorLocs(:,:) = sensorLocs(:,:);
 
         % Second, make the measurement, with noise added..
         plant_measurement = meas.measureUpdateWithNoise(actual_loc);
         plant_measurements = [plant_measurements,plant_measurement];
-        % Third, make estimation of target location using ekf. Also update ekf.
-        % Important: after calling ekf.correct(), we must also call
-        % ekf.predict() for the ekf states to be properly updated! If we do not
-        % call ekf.predict() after calling ekf.correct(), the state of ekf will
-        % be wrong!
+        
+        % Correct the current predicted state based on observation.
+        residual = ekf.residual(plant_measurement); % Book keeping step, this does not affect the state of ekf.
+        
         ekf.correct(plant_measurement);
-        estimated_loc=ekf.predict();
-        predicts(:,i)=estimated_loc(end-1:end);
-
+        corrects(:,i)=ekf.State(end-1:end);
+     
 
         %Fourth, move the sensors w.r.t estimated_loc
         if enable_sensor_movement
-            move_sensor_function(sensors,estimated_loc(end-1:end),plant_measurement);
+            move_sensor_function(sensors,ekf.State(end-1:end),plant_measurement);
         end
-%         dynamics.updateTime();
+        
     end
-%    plant_measurements;     
 end
 
 
