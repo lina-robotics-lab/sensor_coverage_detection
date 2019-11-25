@@ -42,8 +42,8 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
     % Create the dynamics object
     % Parameter for 8-shape movement.
     % Sampling interval for target location.
-%     dynamics =  EightShapeDynamics(omega, dt);
-    dynamics =  Revised_EightShapeDynamics(omega, dt);
+    dynamics =  EightShapeDynamics(omega, dt);
+%     dynamics =  Revised_EightShapeDynamics(omega, dt);
 %     dynamics = Cheating_EightShapeDynamics(omega,dt);
     
     % Create the measurement object

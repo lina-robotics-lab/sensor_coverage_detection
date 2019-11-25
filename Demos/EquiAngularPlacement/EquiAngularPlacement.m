@@ -25,11 +25,20 @@ setEKFUsageDemoDefaultParams(); % Assign the simulation parameters with default 
 omega=0.1;
 b=1;
 total_time = 60;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
-dt = 0.1;
+dt = 1;
 max_iter= floor(total_time/dt); 
 measure_noise_variance=10e-2;
 k=1/4;
 enable_sensor_movement=true;
+
+% Use the following initial target location when using the revised
+% % dynammics.
+% a0=0;
+% initial_target_loc = [a0;sin(a0);sin(a0)*cos(a0)]; 
+% initial_location_estimation=initial_target_loc;
+
+
+
 [corrects_1,predicts_1,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(@move_sensors_equi_angular);
 
 plot(2:max_iter,plant_measurements);

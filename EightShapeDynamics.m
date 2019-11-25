@@ -36,16 +36,23 @@ classdef EightShapeDynamics < handle
 
                 % Magical math derivation.
                 % Key formula used:sin(a+b)=sin(a)cos(b)+cos(a)sin(b).
-                if state(1)==0
+                  if state(1)==0
                     new_state = [sin(omega*dt);sin(omega*dt)*cos(omega*dt)];
                 else
-                    
-                    new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*abs(cos(asin(state(1))))*sign(state(1)*state(2));state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
-%                     new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
-                end
-%                  new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
-             
-            
+                  %% v3
+                  cosine_apprx=abs(cos(asin(state(1))))*sign(state(1)*state(2));
+                  new_q1=state(1)*cos(omega*dt)+cosine_apprx*sin(omega*dt);
+                  new_q2 = new_q1*(-state(1)*sin(omega*dt)+cosine_apprx*cos(omega*dt));
+                  new_state = [new_q1;new_q2];
+                  
+                  %% v2
+%                   new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*abs(cos(asin(state(1))))*sign(state(1)*state(2));state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                  
+                  %% v1
+%                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+
+                end              
+%                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
         end
         
         function new_state = stateUpdateWithNoise(obj,state,varargin)
@@ -63,8 +70,17 @@ classdef EightShapeDynamics < handle
                 if state(1)==0
                     new_state = [sin(omega*dt);sin(omega*dt)*cos(omega*dt)];
                 else
-                  new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*abs(cos(asin(state(1))))*sign(state(1)*state(2));state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
-%                                   new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                  %% v3
+                  cosine_apprx=abs(cos(asin(state(1))))*sign(state(1)*state(2));
+                  new_q1=state(1)*cos(omega*dt)+cosine_apprx*sin(omega*dt);
+                  new_q2 = new_q1*(-state(1)*sin(omega*dt)+cosine_apprx*cos(omega*dt));
+                  new_state = [new_q1;new_q2];
+                  
+                  %% v2
+%                   new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*abs(cos(asin(state(1))))*sign(state(1)*state(2));state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
+                  
+                  %% v1
+%                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
 
                 end              
 %                 new_state = [state(1)*cos(omega*dt)+sin(omega*dt)*(state(2))/(state(1)+epsilon) ;state(2)*cos(2*omega*dt)+(1/2-state(1)^2)*sin(2*omega*dt)];
