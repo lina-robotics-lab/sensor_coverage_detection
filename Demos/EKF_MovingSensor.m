@@ -42,9 +42,10 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
     % Create the dynamics object
     % Parameter for 8-shape movement.
     % Sampling interval for target location.
-    dynamics =  EightShapeDynamics(omega, dt);
+%     dynamics =  EightShapeDynamics(omega, dt);
 %     dynamics =  Revised_EightShapeDynamics(omega, dt);
 %     dynamics = Cheating_EightShapeDynamics(omega,dt);
+    dynamics = StraightShapeDynamics(0.01, dt);
     
     % Create the measurement object
     % Assume the sensors are placed at fixed locations.
@@ -93,7 +94,7 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
         plant_measurements = [plant_measurements,plant_measurement];
         
         % Correct the current predicted state based on observation.
-        residual = ekf.residual(plant_measurement); % Book keeping step, this does not affect the state of ekf.
+%         residual = ekf.residual(plant_measurement); % Book keeping step, this does not affect the state of ekf.
         
         ekf.correct(plant_measurement);
         corrects(:,i)=ekf.State(end-1:end);

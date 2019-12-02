@@ -17,6 +17,7 @@ total_time = 60;%Select total time carefully so that we do not encounters the cr
 max_iter= floor(total_time/dt);
 
 dynamics =  EightShapeDynamics(omega, dt);% Create the dynamics object
+% dynamics = StraightShapeDynamics(omega, dt);
 
 
 % Feel free to change the num_of_sensors and initial_angles here.
