@@ -30,7 +30,8 @@ function setEKFUsageDemoDefaultParams()
     proc_noise_variance = 1e-5;
    
     a0=0.0;
-    initial_target_loc = [sin(a0);sin(a0)*cos(a0)]; 
+%     initial_target_loc = [sin(a0);sin(a0)*cos(a0)]; 
+    initial_target_loc = [0.5 * sin(a0); 0.5 * cos(a0)];
     initial_location_estimation=initial_target_loc;
 
 end

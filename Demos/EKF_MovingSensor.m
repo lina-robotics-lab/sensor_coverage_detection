@@ -45,7 +45,8 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
 %     dynamics =  EightShapeDynamics(omega, dt);
 %     dynamics =  Revised_EightShapeDynamics(omega, dt);
 %     dynamics = Cheating_EightShapeDynamics(omega,dt);
-    dynamics = StraightShapeDynamics(0.01, dt);
+%     dynamics = StraightShapeDynamics(0.01, dt);
+    dynamics = CircleShapeDynamics(0.1, dt);
     
     % Create the measurement object
     % Assume the sensors are placed at fixed locations.
