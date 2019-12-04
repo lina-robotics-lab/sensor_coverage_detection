@@ -33,9 +33,9 @@ num_sensors=4;
 enable_sensor_movement=true;
 [predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(@move_sensors_gradient);
 
-plot(2:max_iter,plant_measurements);
+% plot(2:max_iter,plant_measurements);
 
-plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement);
+plot_trajectories(predicts,actual_locs,plant_measurements,b,enable_sensor_movement);
 legend();
 figure;
 plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement);
@@ -48,8 +48,8 @@ plot_error(predicts,actual_locs,total_time,b,enable_sensor_movement);
 legend();
 
 
-plot_trajectories(predicts,actual_locs,sensors,b,enable_sensor_movement);
+plot_trajectories(predicts,actual_locs,plant_measurements,b,enable_sensor_movement);
 legend()
 
 figure;
-plot(2:max_iter,plant_measurements);
+% plot(2:max_iter,plant_measurements);
