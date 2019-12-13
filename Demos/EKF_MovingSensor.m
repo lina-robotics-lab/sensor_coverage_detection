@@ -22,10 +22,10 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
     % Note: the sensors move along a boundary, which may not be a circled
     % centered at the target location.
 
-%     initial_angles = pi+0.05*(0.5-rand(num_sensors)); 
-    initial_angles=2*pi/num_sensors * [1:num_sensors];
+    initial_angles = pi+0.05*(0.5-rand(num_sensors)); 
+%     initial_angles=2*pi/num_sensors * [1:num_sensors];
 
-    boundary_radii = 1.5*ones(1,num_sensors);
+    boundary_radii = 5*ones(1,num_sensors);
     sensorLocs = zeros(2, num_sensors);
 
     for i=1:num_sensors
@@ -45,9 +45,9 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
 %     dynamics =  EightShapeDynamics(omega, dt);
 %     dynamics =  Revised_EightShapeDynamics(omega, dt);
 %     dynamics = Cheating_EightShapeDynamics(omega,dt);
-%     dynamics = StraightShapeDynamics(0.01, dt);
-    dynamics = CircleShapeDynamics(0.1, dt);
-    
+%     dynamics = StraightShapeDynamics(omega, dt);
+%     dynamics = CircleShapeDynamics(omega, dt);
+    dynamics=StationaryDynamics(omega,dt);
     % Create the measurement object
     % Assume the sensors are placed at fixed locations.
     % In the future,we can dynamically change meas.sensorLocs to represent the movement of
@@ -72,7 +72,8 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
  
     actual_loc=initial_target_loc;
     actual_locs = zeros(space_dimension,max_iter);
-
+    actual_locs(:,1)=actual_loc;
+    
     plant_measurements=[];
     predicts(:,1)=ekf.State(end-1:end);
     for i = 2:max_iter
@@ -80,10 +81,10 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
         % ekf state.
         ekf.predict();
         predicts(:,i)=ekf.State(end-1:end);
-
-        actual_loc=dynamics.stateUpdate(actual_loc); % We use original state update here so that the actual trajectory does not cramp up.
-        actual_locs(:,i)=actual_loc(end-1:end);
-     
+        
+         actual_loc=dynamics.stateUpdate(actual_loc); % We use original state update here so that the actual trajectory does not cramp up.
+            actual_locs(:,i)=actual_loc(end-1:end);
+   
         % First, update the sensorLocs array in the measurement object
         for j=1:num_sensors
             sensorLocs(:, j) = sensors(j).returnPos();

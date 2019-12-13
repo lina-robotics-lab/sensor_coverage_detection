@@ -9,7 +9,7 @@ classdef Measurement < handle
         c1 = 0;
         c2 = 0;
         b = 1;
-        
+        k=1;
         sensorLocs = []; 
         % sensorLocs is an array of sensor location required by
         % measureUpdate method.
@@ -19,7 +19,7 @@ classdef Measurement < handle
     
     methods
         
-        function obj=Measurement(b,measure_noise,c1,c2,R1,R0)
+        function obj=Measurement(b,measure_noise,c1,c2,R1,R0,k)
             if exist('b','var')
               obj.b = b;            
             end
@@ -38,6 +38,9 @@ classdef Measurement < handle
             if exist('measure_noise','var')
               obj.measure_noise = measure_noise;            
             end
+            if exist('k','var')
+                obj.k=k;
+            end
         end
         
         function h = measure(obj,r,noisy)
@@ -48,7 +51,7 @@ classdef Measurement < handle
             % Martinez, Bullo paper.
             r = min(max(r,obj.R0),obj.R1);
             noise=normrnd(0, sqrt(obj.measure_noise));
-            h = (r-obj.c1)^obj.b+obj.c2 + noisy*noise;
+            h = obj.k*(r-obj.c1)^obj.b+obj.c2 + noisy*noise;
             h = max(h,0);% Ensure a non-negative value is returned.
         end
         

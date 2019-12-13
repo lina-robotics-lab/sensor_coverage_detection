@@ -20,15 +20,16 @@ setEKFUsageDemoDefaultParams(); % Assign the simulation parameters with default 
 % Then, manually tweak some of the parameters to meet the need of our
 % current experiment.
 
- % The case when omega being small is a sanity check, that the target barely moves.
+ % The casye when omega being small is a sanity check, that the target barely moves.
 % omega=1e-4;
-omega=0.1;
-b=1;
-total_time = 60;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
+omega=0.01;
+b=-2;
+total_time = 110;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
 dt = 1;
 max_iter= floor(total_time/dt); 
 measure_noise_variance=10e-2;
 k=1/4;
+
 enable_sensor_movement=true;
 
 % Use the following initial target location when using the revised

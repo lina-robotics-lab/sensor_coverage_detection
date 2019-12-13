@@ -12,10 +12,14 @@ function setEKFUsageDemoDefaultParams()
     global initial_target_loc; 
     global initial_location_estimation;
     global descent_step_size;
+    global Min_Separation;
+    global mu;
+    global barrier_order;
+   
     descent_step_size=0.1;
     dt = 1;
  
-    omega = 0.1;
+    omega = 0.0;
 
     total_time = 60;%Select total time carefully so that we do not encounters the crossing point. As that point will make state update unstable.
     max_iter= floor(total_time/dt);
@@ -33,5 +37,9 @@ function setEKFUsageDemoDefaultParams()
 %     initial_target_loc = [sin(a0);sin(a0)*cos(a0)]; 
     initial_target_loc = [0.5 * sin(a0); 0.5 * cos(a0)];
     initial_location_estimation=initial_target_loc;
-
+    
+    % Parameters for the barrier function.
+    Min_Separation=2;
+    mu=0.00001;
+    barrier_order=5;
 end
