@@ -5,7 +5,7 @@
 % object is different.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_Robustness(move_sensor_function)
+function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_Robustness(move_sensor_function,params,param_errs)
     global dt;
     global omega;
     global max_iter;
@@ -45,7 +45,7 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_Robustne
 %     dynamics =  Revised_EightShapeDynamics(omega, dt);
 %     dynamics = Cheating_EightShapeDynamics(omega,dt);
 %     dynamics = StraightShapeDynamics(omega, dt);
-%     dynamics = CircleShapeDynamics(omega, dt);
+    dynamics = CircleShapeDynamics(omega, dt);
 %     dynamics=StationaryDynamics(omega,dt);
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -58,12 +58,10 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_Robustne
     measure_noise = measure_noise_variance*eye(length(sensorLocs));
     proc_noise = proc_noise_variance*eye(length(initial_target_loc));
     
-    db=-2;
-    K=1; dK=0;
-    R1=1e5; dR1=0; % Outter boundary
-    R0=1e-5; dR0=0; % Inner boundary
-    c1=0; dc1=0;
-    c2=0; dc2=0;
+    
+    c1=params.c1; c2=params.c2; R1=params.R1; R0=params.R0; K=params.K;
+    dc1=param_errs.dc1; dc2=param_errs.dc2; dR1=param_errs.dR1; dR0=param_errs.dR0; dK=param_errs.dK;
+    db=param_errs.db;
     
     ideal_meas = Measurement(b,measure_noise_variance,c1,c2,R1,R0,K);    
     actual_meas = Measurement(b+db,measure_noise_variance,c1+dc1,c2+dc2,R1+dR1,R0+dR0,K+dK);
