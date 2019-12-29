@@ -67,8 +67,8 @@ classdef SensorClass < handle
         function r=moveSensorGradient(obj,gradient,step_size)
 		epsilon=1e-8;
             if norm(gradient)~=0
-%                 obj.curr_loc=obj.curr_loc+step_size*gradient/(epsilon+norm(gradient));
-                obj.curr_loc=obj.curr_loc+step_size*gradient;
+                obj.curr_loc=obj.curr_loc+step_size*gradient/(epsilon+norm(gradient));
+%                 obj.curr_loc=obj.curr_loc+step_size*gradient;
             end
             assert(~isnan(obj.curr_loc(1)));
             obj.states =  [obj.states; [obj.curr_loc', NaN, obj.time]];

@@ -29,7 +29,7 @@ function setEKFUsageDemoDefaultParams()
     num_sensors = 4;
     k = 1/4; % Control gain for equi-angular control rule.
     boundary_origin=[0;0];
-    b = 1;
+    b = -2;
     measure_noise_variance = 5e-2;
     proc_noise_variance = 1e-5;
    
@@ -40,6 +40,6 @@ function setEKFUsageDemoDefaultParams()
     
     % Parameters for the barrier function.
     Min_Separation=2;
-    mu=0.00001;
+    mu=0.00000;
     barrier_order=5;
 end

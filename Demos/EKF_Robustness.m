@@ -1,9 +1,11 @@
 % close all;
-% This is the code base for demos to how to use EKF to estimate the
-% coordinate of a target on a 2D plane.
+% This is the code base for studying the robustness of EKF estimation under
+% imperfect knowledge of measurement function. The simulation code largely
+% inherit from EKF_MovingSensor.m, except the use of measurement
+% object is different.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSensor(move_sensor_function)
+function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_Robustness(move_sensor_function)
     global dt;
     global omega;
     global max_iter;
@@ -22,10 +24,10 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
     % Note: the sensors move along a boundary, which may not be a circled
     % centered at the target location.
 
-    initial_angles = pi+0.05*(0.5-rand(num_sensors)); 
-%     initial_angles=2*pi/num_sensors * [1:num_sensors];
+%     initial_angles = pi+0.05*(0.5-rand(num_sensors)); 
+    initial_angles=2*pi/num_sensors * [1:num_sensors];
 
-    boundary_radii = 10*ones(1,num_sensors);
+    boundary_radii = 1.5*ones(1,num_sensors);
     sensorLocs = zeros(2, num_sensors);
 
     for i=1:num_sensors
@@ -39,40 +41,54 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
     space_dimension = size(sensorLocs);
     space_dimension = space_dimension(1);
 
-    % Create the dynamics object
-    % Parameter for 8-shape movement.
-    % Sampling interval for target location.
 %     dynamics =  EightShapeDynamics(omega, dt);
 %     dynamics =  Revised_EightShapeDynamics(omega, dt);
 %     dynamics = Cheating_EightShapeDynamics(omega,dt);
 %     dynamics = StraightShapeDynamics(omega, dt);
 %     dynamics = CircleShapeDynamics(omega, dt);
-    dynamics=StationaryDynamics(omega,dt);
-  
-    % Create the measurement object
+%     dynamics=StationaryDynamics(omega,dt);
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Important: Create two measurement objects, ideal_meas and actual_meas, with slightly different model
+%%% parameters. We will eventually feed ideal_meas to the EKF estimator and use actual_meas
+%%% to generate the actual measurement data.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     mus = zeros(length(sensorLocs),1);
     measure_noise = measure_noise_variance*eye(length(sensorLocs));
     proc_noise = proc_noise_variance*eye(length(initial_target_loc));
-    meas = Measurement(b,measure_noise_variance);
-    meas.sensorLocs = sensorLocs;
+    
+    db=-2;
+    K=1; dK=0;
+    R1=1e5; dR1=0; % Outter boundary
+    R0=1e-5; dR0=0; % Inner boundary
+    c1=0; dc1=0;
+    c2=0; dc2=0;
+    
+    ideal_meas = Measurement(b,measure_noise_variance,c1,c2,R1,R0,K);    
+    actual_meas = Measurement(b+db,measure_noise_variance,c1+dc1,c2+dc2,R1+dR1,R0+dR0,K+dK);
+    ideal_meas.sensorLocs = sensorLocs;
+    actual_meas.sensorLocs = sensorLocs;
 
-    %  Create an ekf object
-    ekf = extendedKalmanFilter(@dynamics.stateUpdate,@meas.measureUpdatePerfect,initial_location_estimation);
+    %  Create an ekf object. Notice we feed ideal_meas to the ekf
+    %  estimator.
+    ekf = extendedKalmanFilter(@dynamics.stateUpdate,@ideal_meas.measureUpdatePerfect,initial_location_estimation);
     ekf.ProcessNoise = proc_noise;
     ekf.MeasurementNoise = measure_noise;
-%     ekf.MeasurementJacobianFcn =  @meas.measureJacobian;
     % Remark: dynamics.stateUpdate and meas.measureUpdate are both object methods
-
+    
+    % Declare book-keeping data structures
     predicts = zeros(space_dimension,max_iter);
     corrects = zeros(space_dimension,max_iter);
-%     residuals = zeros(num_sensors,max_iter);
-%  
+
     actual_loc=initial_target_loc;
     actual_locs = zeros(space_dimension,max_iter);
     actual_locs(:,1)=actual_loc;
     
     plant_measurements=[];
     predicts(:,1)=ekf.State(end-1:end);
+    
+    % Enter the main loop of simulation
     for i = 2:max_iter
         % Make a prediction about incoming state based on current corrected
         % ekf state.
@@ -86,19 +102,20 @@ function [corrects,predicts,actual_locs,sensors,plant_measurements]=EKF_MovingSe
         for j=1:num_sensors
             sensorLocs(:, j) = sensors(j).returnPos();
         end
-        meas.sensorLocs(:,:) = sensorLocs(:,:);
+        
+        % We need to update sensor locs for both the measurement object.
+        ideal_meas.sensorLocs(:,:) = sensorLocs(:,:);
+        actual_meas.sensorLocs(:,:) = sensorLocs(:,:);
 
-        % Second, make the measurement, with noise added..
-        plant_measurement = meas.measureUpdateWithNoise(actual_loc);
+        % Second, make the measurement, with noise added. Notice we use
+        % actual_meas to generate the measurement data.
+        plant_measurement = actual_meas.measureUpdateWithNoise(actual_loc);
         plant_measurements = [plant_measurements,plant_measurement];
         
-        % Correct the current predicted state based on observation.
-%         residual = ekf.residual(plant_measurement); % Book keeping step, this does not affect the state of ekf.
-        
+        % Correct the current predicted state based on observation.       
         ekf.correct(plant_measurement);
         corrects(:,i)=ekf.State(end-1:end);
      
-
         %Fourth, move the sensors w.r.t estimated_loc
         if enable_sensor_movement
             move_sensor_function(sensors,ekf.State(end-1:end),plant_measurement);
